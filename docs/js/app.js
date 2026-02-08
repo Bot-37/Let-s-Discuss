@@ -42,8 +42,8 @@ const appState = {
 const THEME_TOGGLE_TEMPLATE = `
   <span class="theme-track" aria-hidden="true">
     <span class="theme-thumb">
-      <span class="icon-sun"><img src="/docs/assets/sun.png" alt="sun" /></span>
-      <span class="icon-moon"><img src="/docs/assets/moon.png" alt="moon" /></span>
+      <span class="icon-sun"><img src="assets/sun.png" alt="sun" /></span>
+      <span class="icon-moon"><img src="assets/moon.png" alt="moon" /></span>
     </span>
   </span>
 `;
