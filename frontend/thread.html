@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thread | Let's Discuss</title>
+  <link rel="icon" type="image/png" href="/frontend/assets/incognito.png" />
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <script src="/frontend/runtime-config.js"></script>
+  <script src="/frontend/js/app.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <a href="home.html" style="text-decoration: none; color: inherit;">
+      <h1>LET'S DISCUSS</h1>
+    </a>
+  </div>
+  <div class="header-actions">
+    <a href="dashboard.html" class="nav-link" onclick="event.preventDefault(); openDashboard();">Dashboard</a>
+    <span class="user-badge">Anonymous #A91F</span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
+  </div>
+</header>
+
+<main class="thread-page">
+  <div class="breadcrumb">
+    <a href="home.html">← Back to threads</a>
+  </div>
+
+  <div class="thread-header-section">
+    <h1 id="threadTitle" class="thread-title">Loading thread...</h1>
+    <div class="thread-stats">
+      <span id="threadRepliesStat" class="stat">0 replies</span>
+      <span id="threadPostsStat" class="stat">0 posts</span>
+      <span id="threadStartedStat" class="stat">Started recently</span>
+    </div>
+  </div>
+
+  <div id="postsContainer" class="posts-container"></div>
+
+  <!-- Reply Box -->
+  <div class="reply-box">
+    <div class="reply-header">
+      <span>Posting as <strong id="replyAuthor">Anonymous</strong></span>
+    </div>
+    <textarea id="replyContent" placeholder="Share your perspective..." rows="4"></textarea>
+    <div class="reply-actions">
+      <div class="reply-tips">
+        <span class="tip">💡 Be respectful</span>
+        <span class="tip">💬 Stay on topic</span>
+      </div>
+      <button class="btn-primary" onclick="submitReply()">Post Reply</button>
+    </div>
+  </div>
+
+  <div class="thread-fab-stack" aria-label="Thread controls">
+    <button id="nextThreadBtn" class="floating-action next-thread-btn" type="button">
+      Next Thread →
+    </button>
+    <button
+      id="scrollTopBtn"
+      class="floating-action scroll-top-btn"
+      type="button"
+      aria-label="Scroll to top"
+      title="Scroll to top"
+    >
+      ↑
+    </button>
+  </div>
+</main>
+
+</body>
+</html>

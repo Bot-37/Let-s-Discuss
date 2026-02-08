@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let's Discuss — Anonymous Forums</title>
+  <link rel="icon" type="image/png" href="/frontend/assets/incognito.png" />
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <script src="/frontend/runtime-config.js"></script>
+  <script src="/frontend/js/app.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>LET'S<br>DISCUSS</h1>
+    <div class="logo-subtitle">Anonymous Forums</div>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
+    <button class="btn-outline" type="button" onclick="showAuthChoiceModal()">Sign In</button>
+  </div>
+</header>
+
+<main class="landing">
+  <div class="hero">
+    <h2 class="hero-title">Speak freely.<br>Stay unknown.</h2>
+    <p class="hero-description">
+      Share knowledge, challenge ideas, and connect with others without compromising your identity.
+      No tracking. No profiles. Just conversation.
+    </p>
+    
+    <div class="cta-group">
+      <button class="btn-primary" type="button" onclick="showAuthChoiceModal()">Get Started</button>
+      <a href="home.html"><button class="btn-outline">Continue Anonymously</button></a>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon"><img src="/frontend/assets/incognito.png" alt="anonymity"></div>
+      <h3>True Anonymity</h3>
+      <p>No email required. No tracking cookies. You control your identity.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><img src="/frontend/assets/chat.png" alt="chat"></div>
+      <h3>Open Dialogue</h3>
+      <p>Discuss anything without judgment. Real conversations, real opinions.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><img src="/frontend/assets/community.png" alt="community"></div>
+      <h3>Community Driven</h3>
+      <p>No algorithms. No ads. Just people sharing knowledge freely.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-number">1,247</div>
+      <div class="stat-label">Active Threads</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">12.4k</div>
+      <div class="stat-label">Anonymous Users</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">89.2k</div>
+      <div class="stat-label">Total Posts</div>
+    </div>
+  </div>
+</main>
+
+<div id="authChoiceModal" class="modal">
+  <div class="modal-content auth-choice-modal">
+    <div class="modal-header">
+      <h3>Start Discussing</h3>
+      <button class="modal-close" type="button" onclick="closeAuthChoiceModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="auth-choice-copy">Choose how you want to continue.</p>
+      <div class="auth-choice-actions">
+        <button class="btn-primary btn-full" type="button" onclick="goToLoginPage('login')">Sign In</button>
+        <button class="btn-outline btn-full" type="button" onclick="goToLoginPage('register')">Create Account</button>
+        <button class="btn-outline btn-full" type="button" onclick="continueAsAnonymous()">Continue as Anonymous</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>No data collection. No user tracking. No corporate interests.</p>
+</footer>
+
+</body>
+</html>

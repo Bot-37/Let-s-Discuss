@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile | Let's Discuss</title>
+  <link rel="icon" type="image/png" href="/frontend/assets/incognito.png" />
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <script src="/frontend/runtime-config.js"></script>
+  <script src="/frontend/js/app.js" defer></script>
+  <script src="/frontend/js/dashboard.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <a href="index.html" style="text-decoration: none; color: inherit;">
+      <h1>LET'S DISCUSS</h1>
+    </a>
+  </div>
+  <div class="header-actions">
+    <a href="home.html" class="nav-link">Threads</a>
+    <span class="user-badge" id="userBadge" data-profile-menu="disabled">Loading profile...</span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
+  </div>
+</header>
+
+<main class="dashboard-page">
+  <!-- Profile Header (Registered User) -->
+  <div class="profile-header">
+    <div class="profile-banner" id="profileBanner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      <div class="banner-overlay"></div>
+      <button class="banner-edit-btn" id="bannerEditBtn" onclick="showBannerUploadModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Change Banner
+      </button>
+    </div>
+    
+    <div class="profile-info-container">
+      <div class="profile-avatar editable" id="profileAvatar" onclick="showAvatarUploadModal()">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b4d8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="Profile avatar" id="avatarImg" />
+        <div class="avatar-edit-overlay">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="profile-details">
+        <div class="profile-name-edit">
+          <h1 class="profile-name" id="profileName">Loading profile...</h1>
+          <button class="icon-btn" onclick="editProfile()" title="Edit profile">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="profile-type" id="profileType">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align: middle;">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+          Verified Member
+        </p>
+        <p class="profile-bio editable" id="profileBio">Loading profile bio...</p>
+      </div>
+      
+      <div class="profile-actions">
+        <button class="btn-outline" onclick="showSettingsModal()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+          </svg>
+          Settings
+        </button>
+        <button class="btn-outline" onclick="shareProfile()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Share
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="statThreads">0</div>
+        <div class="stat-label">Threads Started</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="statReplies">0</div>
+        <div class="stat-label">Replies Posted</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="statLikes">--</div>
+        <div class="stat-label">Likes Received</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2" stroke="var(--bg-main)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="statJoined">Today</div>
+        <div class="stat-label">Member Since</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="dashboard-tabs">
+    <button class="tab-btn active" data-tab="activity">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+      Activity
+    </button>
+    <button class="tab-btn" data-tab="threads">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      My Threads
+    </button>
+    <button class="tab-btn" data-tab="replies">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+      </svg>
+      My Replies
+    </button>
+    <button class="tab-btn" data-tab="saved">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      Saved
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="dashboard-content">
+    <!-- Activity Tab -->
+    <div class="tab-content active" id="activityTab">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <h3>Loading Activity</h3>
+        <p>Your recent thread and reply activity will appear here.</p>
+      </div>
+    </div>
+
+    <!-- My Threads Tab -->
+    <div class="tab-content" id="threadsTab">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <h3>Loading Threads</h3>
+        <p>Threads you started will show here after syncing with the backend.</p>
+      </div>
+    </div>
+
+    <!-- My Replies Tab -->
+    <div class="tab-content" id="repliesTab">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+        <h3>Loading Replies</h3>
+        <p>Your replies will appear once data is fetched.</p>
+      </div>
+    </div>
+
+    <!-- Saved Tab -->
+    <div class="tab-content" id="savedTab">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <h3>No Saved Items</h3>
+        <p>Saved content will appear here once connected.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Settings Modal (Same as anonymous but with more options) -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h3>Settings</h3>
+      <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-layout">
+        <!-- Settings Sidebar -->
+        <div class="settings-sidebar">
+          <button class="settings-nav-btn active" data-setting="profile">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" fill="none" stroke-width="2"/>
+            </svg>
+            Profile
+          </button>
+          <button class="settings-nav-btn" data-setting="appearance">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" fill="none" stroke-width="2"/>
+            </svg>
+            Appearance
+          </button>
+          <button class="settings-nav-btn" data-setting="privacy">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" fill="none" stroke-width="2"/>
+            </svg>
+            Privacy
+          </button>
+          <button class="settings-nav-btn" data-setting="notifications">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" fill="none" stroke-width="2"/>
+            </svg>
+            Notifications
+          </button>
+          <button class="settings-nav-btn" data-setting="account">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path d="M12 15l-2-2m0 0l-2 2m2-2v6m9-9a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" fill="none" stroke-width="2"/>
+            </svg>
+            Account
+          </button>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+          <!-- Profile Settings -->
+          <div class="settings-panel active" id="profileSettings">
+            <h4>Profile Settings</h4>
+            
+            <div class="setting-group">
+              <label class="setting-label">Username</label>
+              <input type="text" class="setting-input" id="settingsUsername" value="" readonly />
+              <p class="setting-hint">Username cannot be changed</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Display Name</label>
+              <input type="text" class="setting-input" id="settingsDisplayName" readonly />
+              <p class="setting-hint">Synced from your profile details</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Bio</label>
+              <textarea class="setting-textarea" id="settingsBio" rows="4" readonly></textarea>
+              <p class="setting-hint">Use "Edit Profile" to update your public bio.</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Profile Visibility</label>
+              <select class="setting-select">
+                <option value="public">Public - Anyone can view your profile</option>
+                <option value="members">Members Only - Only registered users</option>
+                <option value="private">Private - Only you</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" onclick="editProfile()">Edit Profile</button>
+          </div>
+
+          <!-- Appearance Settings -->
+          <div class="settings-panel" id="appearanceSettings">
+            <h4>Appearance</h4>
+            
+            <div class="setting-group">
+              <label class="setting-label">Theme</label>
+              <div class="theme-selector">
+                <button class="theme-option active" data-theme="dark">
+                  <div class="theme-preview theme-preview-dark"></div>
+                  <span>Dark</span>
+                </button>
+                <button class="theme-option" data-theme="auto">
+                  <div class="theme-preview theme-preview-auto"></div>
+                  <span>Auto</span>
+                </button>
+                <button class="theme-option" data-theme="light">
+                  <div class="theme-preview theme-preview-light"></div>
+                  <span>Light</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Accent Color</label>
+              <div class="color-picker">
+                <button class="color-option" style="background: #00b4d8;" data-color="#00b4d8"></button>
+                <button class="color-option" style="background: #06ffa5;" data-color="#06ffa5"></button>
+                <button class="color-option" style="background: #667eea;" data-color="#667eea"></button>
+                <button class="color-option" style="background: #f72585;" data-color="#f72585"></button>
+                <button class="color-option" style="background: #ffd60a;" data-color="#ffd60a"></button>
+                <button class="color-option" style="background: #ff6b35;" data-color="#ff6b35"></button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Font Size</label>
+              <div class="slider-control">
+                <span class="slider-label">Small</span>
+                <input type="range" min="14" max="20" value="16" step="1" id="fontSizeSlider" />
+                <span class="slider-label">Large</span>
+              </div>
+              <span class="setting-hint">Current: <span id="fontSizeValue">16px</span></span>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Compact Mode</label>
+                  <p class="setting-hint">Show more content on screen</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="compactMode" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Animations</label>
+                  <p class="setting-hint">Enable smooth transitions and effects</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="animationsEnabled" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy Settings -->
+          <div class="settings-panel" id="privacySettings">
+            <h4>Privacy & Safety</h4>
+            
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Show Activity Status</label>
+                  <p class="setting-hint">Let others see when you're online</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="showActivity" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Show Profile in Search</label>
+                  <p class="setting-hint">Allow your profile to appear in search results</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="showInSearch" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Anonymous Mode</label>
+                  <p class="setting-hint">Post and reply without showing your username</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="anonymousMode" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Who Can Message You</label>
+              <select class="setting-select">
+                <option value="everyone">Everyone</option>
+                <option value="members">Members Only</option>
+                <option value="none">No One</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Blocked Users</label>
+              <p class="setting-hint">You haven't blocked anyone yet.</p>
+              <button class="btn-outline">Manage Blocked Users</button>
+            </div>
+          </div>
+
+          <!-- Notification Settings -->
+          <div class="settings-panel" id="notificationsSettings">
+            <h4>Notifications</h4>
+            
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Thread Replies</label>
+                  <p class="setting-hint">Get notified when someone replies to your threads</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyReplies" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Mentions</label>
+                  <p class="setting-hint">Get notified when someone mentions you</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyMentions" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Likes</label>
+                  <p class="setting-hint">Get notified when someone likes your content</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifyLikes" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-toggle">
+                <div>
+                  <label class="setting-label">Email Notifications</label>
+                  <p class="setting-hint">Receive important updates via email</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="emailNotify" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Notification Frequency</label>
+              <select class="setting-select">
+                <option value="instant">Instant</option>
+                <option value="hourly">Hourly Digest</option>
+                <option value="daily">Daily Digest</option>
+                <option value="never">Never</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Account Settings -->
+          <div class="settings-panel" id="accountSettings">
+            <h4>Account Management</h4>
+            
+            <div class="setting-group">
+              <label class="setting-label">Account Type</label>
+              <p class="setting-value" id="accountTypeValue">Verified Member</p>
+              <p class="setting-hint">Authentication and identity are managed by the backend.</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Change Password</label>
+              <button class="btn-outline">Update Password</button>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Two-Factor Authentication</label>
+              <p class="setting-hint">Add an extra layer of security</p>
+              <button class="btn-outline">Enable 2FA</button>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Download Your Data</label>
+              <p class="setting-hint">Export all your threads, replies, and activity</p>
+              <button class="btn-outline">Request Data Export</button>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label danger">Delete Account</label>
+              <p class="setting-hint">Permanently delete your account and all data</p>
+              <button class="btn-outline btn-danger">Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Banner Upload Modal -->
+<div id="bannerUploadModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Change Profile Banner</h3>
+      <button class="modal-close" onclick="closeBannerUploadModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" id="bannerUploadArea" onclick="document.getElementById('bannerInput').click()">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <p>Click to upload or drag and drop</p>
+        <span class="upload-hint">PNG, JPG, GIF up to 5MB (Recommended: 1500x500px)</span>
+        <input type="file" id="bannerInput" accept="image/*" style="display: none;" onchange="previewBanner(event)" />
+      </div>
+      <div id="bannerPreview" class="banner-preview" style="display: none;">
+        <img id="bannerPreviewImg" src="" alt="Banner preview" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeBannerUploadModal()">Cancel</button>
+        <button class="btn-primary" id="saveBannerBtn" onclick="saveBanner()" style="display: none;">Save Banner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Upload Modal -->
+<div id="avatarUploadModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Change Profile Picture</h3>
+      <button class="modal-close" onclick="closeAvatarUploadModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" id="avatarUploadArea" onclick="document.getElementById('avatarInput').click()">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <p>Click to upload or drag and drop</p>
+        <span class="upload-hint">PNG, JPG up to 2MB (Square image recommended)</span>
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="previewAvatar(event)" />
+      </div>
+      <div id="avatarPreview" class="avatar-preview-modal" style="display: none;">
+        <img id="avatarPreviewImg" src="" alt="Avatar preview" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeAvatarUploadModal()">Cancel</button>
+        <button class="btn-primary" id="saveAvatarBtn" onclick="saveAvatar()" style="display: none;">Save Picture</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Edit Profile</h3>
+      <button class="modal-close" onclick="closeEditProfileModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-group">
+        <label class="setting-label">Display Name</label>
+        <input type="text" class="setting-input" id="editDisplayName" placeholder="Enter display name (optional)" />
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Bio</label>
+        <textarea class="setting-textarea" id="editBio" rows="4" placeholder="Tell others about yourself..."></textarea>
+        <p class="setting-hint"><span id="editBioCount">0</span>/500 characters</p>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Website</label>
+        <input type="url" class="setting-input" id="editWebsite" placeholder="https://..." />
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Location</label>
+        <input type="text" class="setting-input" id="editLocation" placeholder="City, Country" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeEditProfileModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
