@@ -32,6 +32,8 @@ const corsOrigins = process.env.CORS_ORIGIN
   : isProduction
     ? []
     : developmentCorsOrigins;
+const dbSsl = toBool(process.env.DB_SSL, isProduction);
+const dbSslRejectUnauthorized = toBool(process.env.DB_SSL_REJECT_UNAUTHORIZED, false);
 
 const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
 const missing = requiredVars.filter((key) => !process.env[key]);
@@ -56,11 +58,8 @@ export const env = Object.freeze({
   DB_POOL_MAX: toInt(process.env.DB_POOL_MAX, 10),
   DB_IDLE_TIMEOUT_MS: toInt(process.env.DB_IDLE_TIMEOUT_MS, 30000),
   DB_CONNECTION_TIMEOUT_MS: toInt(process.env.DB_CONNECTION_TIMEOUT_MS, 5000),
-  DB_SSL: toBool(process.env.DB_SSL, false),
-  DB_SSL_REJECT_UNAUTHORIZED: toBool(
-    process.env.DB_SSL_REJECT_UNAUTHORIZED,
-    true
-  ),
+  DB_SSL: dbSsl,
+  DB_SSL_REJECT_UNAUTHORIZED: dbSslRejectUnauthorized,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "6h",
   TRUST_PROXY: toBool(process.env.TRUST_PROXY, false),
