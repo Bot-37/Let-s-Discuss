@@ -1,8 +1,27 @@
-const RUNTIME_API_BASE_URL =
-  typeof window !== "undefined" && typeof window.__API_BASE_URL__ === "string"
-    ? window.__API_BASE_URL__
-    : null;
-const API_BASE_URL = RUNTIME_API_BASE_URL || localStorage.getItem("api_base_url") || "http://localhost:4000";
+const normalizeApiBase = (value) => {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\/+$/, "");
+};
+
+const resolveApiBaseUrl = () => {
+  const runtimeValue =
+    typeof window !== "undefined" && typeof window.__API_BASE_URL__ === "string"
+      ? normalizeApiBase(window.__API_BASE_URL__)
+      : "";
+  if (runtimeValue) return runtimeValue;
+
+  const localValue = normalizeApiBase(localStorage.getItem("api_base_url"));
+  if (localValue) return localValue;
+
+  if (typeof window !== "undefined" && window.location?.origin) {
+    const origin = normalizeApiBase(window.location.origin);
+    if (origin && origin !== "null") return origin;
+  }
+
+  throw new Error("API base URL is not configured");
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 const AUTH_TOKEN_KEY = "auth_token";
 const USERNAME_KEY = "username";
 const ANON_ID_KEY = "anon_id";
@@ -23,8 +42,8 @@ const appState = {
 const THEME_TOGGLE_TEMPLATE = `
   <span class="theme-track" aria-hidden="true">
     <span class="theme-thumb">
-      <span class="icon-sun"><img src="/frontend/assets/sun.png" alt="sun" /></span>
-      <span class="icon-moon"><img src="/frontend/assets/moon.png" alt="moon" /></span>
+      <span class="icon-sun"><img src="/docs/assets/sun.png" alt="sun" /></span>
+      <span class="icon-moon"><img src="/docs/assets/moon.png" alt="moon" /></span>
     </span>
   </span>
 `;

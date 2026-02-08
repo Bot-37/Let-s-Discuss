@@ -18,11 +18,26 @@ const dashboardState = {
   pollTimer: null,
 };
 
+const normalizeApiBase = (value) => {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\/+$/, "");
+};
+
 const getApiBase = () => {
   if (typeof window !== "undefined" && typeof window.__API_BASE_URL__ === "string") {
-    return window.__API_BASE_URL__;
+    const runtimeValue = normalizeApiBase(window.__API_BASE_URL__);
+    if (runtimeValue) return runtimeValue;
   }
-  return localStorage.getItem("api_base_url") || "http://localhost:4000";
+
+  const localValue = normalizeApiBase(localStorage.getItem("api_base_url"));
+  if (localValue) return localValue;
+
+  if (typeof window !== "undefined" && window.location?.origin) {
+    const origin = normalizeApiBase(window.location.origin);
+    if (origin && origin !== "null") return origin;
+  }
+
+  throw new Error("API base URL is not configured");
 };
 
 const getAuthToken = () => localStorage.getItem("auth_token");

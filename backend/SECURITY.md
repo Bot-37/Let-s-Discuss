@@ -11,7 +11,7 @@
 - Input validation and sanitization:
   - Schema validation in `middleware/validate.middleware.js`.
   - Content normalization in `utils/sanitize.js`.
-- Safe rendering in frontend:
+- Safe rendering in client UI:
   - Thread/post UI is rendered via DOM APIs and `textContent` (no unsafe HTML injection).
 - CSRF protection:
   - Double-submit cookie token via `/api/csrf-token`.

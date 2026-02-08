@@ -11,21 +11,34 @@ import postRoutes from "./routes/posts.routes.js";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "same-site" },
+    referrerPolicy: { policy: "no-referrer" },
+    hsts: env.IS_PRODUCTION
+      ? {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true,
+        }
+      : false,
+  })
+);
 app.disable("x-powered-by");
 
 if (env.TRUST_PROXY) {
   app.set("trust proxy", 1);
 }
 
-const allowedOrigins = env.CORS_ORIGIN.split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-const allowAnyOrigin = allowedOrigins.includes("*");
+const allowedOrigins = new Set(env.CORS_ORIGINS);
+const allowAnyOrigin = allowedOrigins.has("*");
 app.use(
   cors({
-    origin: allowAnyOrigin ? true : allowedOrigins,
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowAnyOrigin || allowedOrigins.has(origin)) return callback(null, true);
+      return callback(new Error("CORS origin not allowed"));
+    },
     credentials: !allowAnyOrigin,
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Anon-Id"],
     exposedHeaders: [
@@ -38,6 +51,11 @@ app.use(
 );
 
 app.use(express.json({ limit: env.JSON_LIMIT }));
+
+app.use("/api", (_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
@@ -60,8 +78,11 @@ app.use((req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error("Unhandled application error", err);
   if (res.headersSent) return;
+  if (err?.message === "CORS origin not allowed") {
+    return res.status(403).json({ message: "Origin is not allowed" });
+  }
+  console.error("Unhandled application error", err);
   res.status(500).json({ message: "Internal server error" });
 });
 

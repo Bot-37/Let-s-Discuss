@@ -11,6 +11,11 @@ async function start() {
   server = app.listen(env.PORT, () => {
     console.log(`Backend running on port ${env.PORT}`);
   });
+
+  // Keep request/connection timeouts explicit to reduce slow-loris style abuse.
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 35_000;
+  server.keepAliveTimeout = 5_000;
 }
 
 async function shutdown(signal) {
@@ -47,6 +52,13 @@ process.on("SIGINT", () => {
 });
 process.on("SIGTERM", () => {
   void shutdown("SIGTERM");
+});
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection", error);
+});
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception", error);
+  void shutdown("uncaughtException");
 });
 
 start().catch((error) => {
