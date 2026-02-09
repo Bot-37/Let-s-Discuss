@@ -15,6 +15,9 @@ export function createSpamGuard({
   getPayload = (req) => req.body?.content || "",
 } = {}) {
   return (req, res, next) => {
+    // Super user bypass for moderation/maintenance actions.
+    if (req.user?.role === "admin") return next();
+
     const now = Date.now();
     const key = `${keyPrefix}:${identityKey(req)}`;
     const content = String(getPayload(req) ?? "");

@@ -20,11 +20,11 @@
   - CSRF cookie supports `SameSite=None; Secure` for HTTPS cross-origin deployments.
 - Authorization:
   - Role-aware JWTs (`user` / `admin`) for access control.
-  - Dedicated super-admin login endpoint at `POST /api/auth/admin/login`.
-  - Admin-only endpoints protected by `requireAdmin`.
+  - Super user signs in via the same `/api/auth/login` flow as normal users.
 - Secure bootstrap:
-  - Optional env-driven admin account bootstrapping (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
   - Startup hardening ensures `users.role` exists with safe defaults.
+  - Enforces a single super user account: `Bot37`.
+  - `ADMIN_PASSWORD` can rotate/update the `Bot37` password hash on startup.
 - Rate limits:
   - Per-endpoint limits with IP/identity keys via `middleware/rateLimit.middleware.js`.
 - Spam guard:

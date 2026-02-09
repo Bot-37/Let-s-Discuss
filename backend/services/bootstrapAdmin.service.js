@@ -12,12 +12,16 @@ async function ensureUserRoleColumn() {
 
 export async function bootstrapAdminUser() {
   await ensureUserRoleColumn();
+  const username = env.SUPER_ADMIN_USERNAME;
 
-  if (!env.ADMIN_USERNAME || !env.ADMIN_PASSWORD) {
+  // Enforce a single super user identity.
+  await db.query("UPDATE users SET role = 'user' WHERE role = 'admin' AND username <> $1", [username]);
+  await db.query("UPDATE users SET role = 'admin' WHERE username = $1", [username]);
+
+  if (!env.ADMIN_PASSWORD) {
     return;
   }
 
-  const username = env.ADMIN_USERNAME;
   const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
 
   const result = await db.query("SELECT id FROM users WHERE username = $1", [username]);

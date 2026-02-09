@@ -6,9 +6,9 @@ import { env } from "./config/env.js";
 import { issueCsrfToken, csrfProtection } from "./middleware/csrf.middleware.js";
 import { createRateLimiter } from "./middleware/rateLimit.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
 import threadRoutes from "./routes/threads.routes.js";
 import postRoutes from "./routes/posts.routes.js";
+import statsRoutes from "./routes/stats.routes.js";
 
 const app = express();
 
@@ -71,7 +71,7 @@ app.get(
 app.use("/api", csrfProtection);
 
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/stats", statsRoutes);
 app.use("/api/threads", threadRoutes);
 app.use("/api/posts", postRoutes);
 

@@ -42,7 +42,6 @@ const corsOrigins = process.env.CORS_ORIGIN
     : developmentCorsOrigins;
 const dbSsl = toBool(process.env.DB_SSL, isProduction);
 const dbSslRejectUnauthorized = toBool(process.env.DB_SSL_REJECT_UNAUTHORIZED, false);
-const adminUsername = process.env.ADMIN_USERNAME?.trim();
 const adminPassword = process.env.ADMIN_PASSWORD;
 
 const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
@@ -58,10 +57,6 @@ if (process.env.JWT_SECRET.length < 32) {
 
 if (isProduction && corsOrigins.length === 0) {
   throw new Error("CORS_ORIGIN must be configured in production");
-}
-
-if ((adminUsername && !adminPassword) || (!adminUsername && adminPassword)) {
-  throw new Error("ADMIN_USERNAME and ADMIN_PASSWORD must both be set together");
 }
 
 if (adminPassword && adminPassword.length < 14) {
@@ -91,6 +86,6 @@ export const env = Object.freeze({
     process.env.CSRF_COOKIE_SAME_SITE,
     isProduction ? "none" : "lax"
   ),
-  ADMIN_USERNAME: adminUsername || null,
+  SUPER_ADMIN_USERNAME: "Bot37",
   ADMIN_PASSWORD: adminPassword || null,
 });

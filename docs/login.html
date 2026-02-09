@@ -28,7 +28,6 @@
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
       <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
-      <button class="auth-tab" onclick="switchTab('admin')">Admin Sign In</button>
     </div>
 
     <!-- Login Form -->
@@ -80,29 +79,6 @@
       <div class="auth-info">
         <p>⚠️ <strong>Important:</strong> There is no password recovery.</p>
         <p>Store your credentials safely. Once lost, they cannot be recovered.</p>
-      </div>
-    </div>
-
-    <!-- Admin Login Form -->
-    <div id="adminForm" class="auth-form">
-      <h2>Super Admin Access</h2>
-      <p class="auth-subtitle">Restricted access for security administration only</p>
-
-      <div class="form-group">
-        <label for="adminUsername">Admin Username</label>
-        <input type="text" id="adminUsername" placeholder="admin_user" autocomplete="username" />
-      </div>
-
-      <div class="form-group">
-        <label for="adminPassword">Admin Password</label>
-        <input type="password" id="adminPassword" placeholder="••••••••••••" autocomplete="current-password" />
-      </div>
-
-      <button class="btn-primary btn-full" onclick="handleAdminLogin()">Admin Sign In</button>
-
-      <div class="auth-info">
-        <p>🔐 Admin credentials are provisioned from secure server environment variables only.</p>
-        <p>Access is role-validated on the backend for every admin endpoint.</p>
       </div>
     </div>
 

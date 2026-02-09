@@ -20,6 +20,9 @@ export function createRateLimiter({
   keyGenerator = defaultKeyGenerator,
 } = {}) {
   return (req, res, next) => {
+    // Super user bypass for operational/admin activity.
+    if (req.user?.role === "admin") return next();
+
     const now = Date.now();
     collectExpiredBuckets(now);
 

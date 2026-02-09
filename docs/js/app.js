@@ -409,7 +409,6 @@ const getCachedThreadIds = () => {
 const switchTab = (tab) => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
-  const adminForm = document.getElementById("adminForm");
   const tabs = document.querySelectorAll(".auth-tab");
 
   tabs.forEach((t) => t.classList.remove("active"));
@@ -417,18 +416,11 @@ const switchTab = (tab) => {
   if (tab === "login") {
     loginForm?.classList.add("active");
     registerForm?.classList.remove("active");
-    adminForm?.classList.remove("active");
     tabs[0]?.classList.add("active");
-  } else if (tab === "register") {
+  } else {
     registerForm?.classList.add("active");
     loginForm?.classList.remove("active");
-    adminForm?.classList.remove("active");
     tabs[1]?.classList.add("active");
-  } else {
-    adminForm?.classList.add("active");
-    loginForm?.classList.remove("active");
-    registerForm?.classList.remove("active");
-    tabs[2]?.classList.add("active");
   }
 };
 
@@ -464,38 +456,6 @@ const handleLogin = async () => {
     showNotification("Login successful", "success");
     setTimeout(() => {
       window.location.href = "home.html";
-    }, 500);
-  } catch (error) {
-    showNotification(error.message, "error");
-  }
-};
-
-const handleAdminLogin = async () => {
-  const username = sanitizeTextInput(document.getElementById("adminUsername")?.value);
-  const password = document.getElementById("adminPassword")?.value;
-
-  if (!username || !password) {
-    showNotification("Please fill in all fields", "error");
-    return;
-  }
-
-  try {
-    await ensureCsrfToken();
-    const data = await requestJson("/api/auth/admin/login", {
-      method: "POST",
-      auth: false,
-      body: { username, password },
-    });
-
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    if (data.user?.username) {
-      localStorage.setItem(USERNAME_KEY, data.user.username);
-      appState.currentUser = data.user;
-    }
-    localStorage.setItem(USER_ROLE_KEY, "admin");
-    showNotification("Admin login successful", "success");
-    setTimeout(() => {
-      window.location.href = "dashboard-user.html";
     }, 500);
   } catch (error) {
     showNotification(error.message, "error");
@@ -1151,7 +1111,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const form = input.closest(".auth-form");
       if (form?.id === "loginForm") handleLogin();
       if (form?.id === "registerForm") handleRegister();
-      if (form?.id === "adminForm") handleAdminLogin();
     });
   });
 
@@ -1170,8 +1129,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     switchTab("register");
   } else if (authMode === "login") {
     switchTab("login");
-  } else if (authMode === "admin") {
-    switchTab("admin");
   }
 });
 
@@ -1179,7 +1136,6 @@ window.toggleTheme = toggleTheme;
 window.switchTab = switchTab;
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
-window.handleAdminLogin = handleAdminLogin;
 window.showNewThreadModal = showNewThreadModal;
 window.closeNewThreadModal = closeNewThreadModal;
 window.createThread = createThread;
