@@ -25,14 +25,16 @@ function appendSetCookie(res, cookieValue) {
 }
 
 function buildCookie(name, value, maxAgeSec) {
+  const sameSite = env.CSRF_COOKIE_SAME_SITE;
+  const sameSiteValue = sameSite.charAt(0).toUpperCase() + sameSite.slice(1);
   const parts = [
     `${name}=${encodeURIComponent(value)}`,
     "Path=/",
-    "SameSite=Lax",
+    `SameSite=${sameSiteValue}`,
     `Max-Age=${maxAgeSec}`,
   ];
 
-  if (env.NODE_ENV === "production") {
+  if (env.NODE_ENV === "production" || sameSite === "none") {
     parts.push("Secure");
   }
 
@@ -49,8 +51,15 @@ export function csrfProtection(req, res, next) {
   if (SAFE_METHODS.has(req.method)) return next();
   if (req.path === "/csrf-token" || req.path === "/api/csrf-token") return next();
 
+  const allowedOrigins = new Set(env.CORS_ORIGINS);
+  const allowAnyOrigin = allowedOrigins.has("*");
+  const origin = req.headers.origin;
+  if (origin && !allowAnyOrigin && !allowedOrigins.has(origin)) {
+    return res.status(403).json({ message: "Origin is not allowed" });
+  }
+
   const fetchSite = req.headers["sec-fetch-site"];
-  if (fetchSite && fetchSite === "cross-site") {
+  if (!origin && fetchSite && fetchSite === "cross-site") {
     return res.status(403).json({ message: "Cross-site requests are forbidden" });
   }
 

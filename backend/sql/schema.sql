@@ -4,6 +4,7 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   username VARCHAR(32) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  role VARCHAR(16) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

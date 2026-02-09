@@ -1,12 +1,15 @@
 import app from "./app.js";
 import { db } from "./config/db.js";
 import { env } from "./config/env.js";
+import { bootstrapSecurityState } from "./services/bootstrapAdmin.service.js";
 
 let server;
 let shuttingDown = false;
 
 async function start() {
   await db.query("SELECT 1");
+  // Apply mandatory security bootstrap (role column + optional admin seed) before serving traffic.
+  await bootstrapSecurityState();
 
   server = app.listen(env.PORT, () => {
     console.log(`Backend running on port ${env.PORT}`);

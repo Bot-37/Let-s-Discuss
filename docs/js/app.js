@@ -10,12 +10,14 @@ const resolveApiBaseUrl = () => {
       : "";
   if (runtimeValue) return runtimeValue;
 
+  // Only allow runtime API overrides in local development to prevent accidental
+  // production traffic redirection through localStorage tampering.
+  const host = typeof window !== "undefined" ? window.location.hostname || "" : "";
+  const isLocalHost = host === "localhost" || host === "127.0.0.1";
   const localValue = normalizeApiBase(localStorage.getItem("api_base_url"));
-  if (localValue) return localValue;
+  if (isLocalHost && localValue) return localValue;
 
   if (typeof window !== "undefined" && window.location?.origin) {
-    const host = window.location.hostname || "";
-    const isLocalHost = host === "localhost" || host === "127.0.0.1";
     const isGithubPages = host.endsWith("github.io");
     const origin = normalizeApiBase(window.location.origin);
 
@@ -33,6 +35,7 @@ const resolveApiBaseUrl = () => {
 const API_BASE_URL = resolveApiBaseUrl();
 const AUTH_TOKEN_KEY = "auth_token";
 const USERNAME_KEY = "username";
+const USER_ROLE_KEY = "user_role";
 const ANON_ID_KEY = "anon_id";
 const CSRF_TOKEN_KEY = "csrf_token";
 const THREAD_CACHE_KEY = "thread_ids";
@@ -135,6 +138,7 @@ const getCurrentUsername = () => appState.currentUser?.username || getStoredUser
 const clearAuthSession = () => {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(USER_ROLE_KEY);
   appState.currentUser = null;
 };
 
@@ -185,6 +189,9 @@ const hydrateCurrentUser = async () => {
     appState.currentUser = user;
     if (user?.username) {
       localStorage.setItem(USERNAME_KEY, user.username);
+    }
+    if (user?.role) {
+      localStorage.setItem(USER_ROLE_KEY, user.role);
     }
   } catch (error) {
     if (String(error.message || "").toLowerCase().includes("invalid")) {
@@ -402,6 +409,7 @@ const getCachedThreadIds = () => {
 const switchTab = (tab) => {
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
+  const adminForm = document.getElementById("adminForm");
   const tabs = document.querySelectorAll(".auth-tab");
 
   tabs.forEach((t) => t.classList.remove("active"));
@@ -409,11 +417,18 @@ const switchTab = (tab) => {
   if (tab === "login") {
     loginForm?.classList.add("active");
     registerForm?.classList.remove("active");
+    adminForm?.classList.remove("active");
     tabs[0]?.classList.add("active");
-  } else {
+  } else if (tab === "register") {
     registerForm?.classList.add("active");
     loginForm?.classList.remove("active");
+    adminForm?.classList.remove("active");
     tabs[1]?.classList.add("active");
+  } else {
+    adminForm?.classList.add("active");
+    loginForm?.classList.remove("active");
+    registerForm?.classList.remove("active");
+    tabs[2]?.classList.add("active");
   }
 };
 
@@ -443,9 +458,44 @@ const handleLogin = async () => {
       localStorage.setItem(USERNAME_KEY, data.user.username);
       appState.currentUser = data.user;
     }
+    if (data.user?.role) {
+      localStorage.setItem(USER_ROLE_KEY, data.user.role);
+    }
     showNotification("Login successful", "success");
     setTimeout(() => {
       window.location.href = "home.html";
+    }, 500);
+  } catch (error) {
+    showNotification(error.message, "error");
+  }
+};
+
+const handleAdminLogin = async () => {
+  const username = sanitizeTextInput(document.getElementById("adminUsername")?.value);
+  const password = document.getElementById("adminPassword")?.value;
+
+  if (!username || !password) {
+    showNotification("Please fill in all fields", "error");
+    return;
+  }
+
+  try {
+    await ensureCsrfToken();
+    const data = await requestJson("/api/auth/admin/login", {
+      method: "POST",
+      auth: false,
+      body: { username, password },
+    });
+
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    if (data.user?.username) {
+      localStorage.setItem(USERNAME_KEY, data.user.username);
+      appState.currentUser = data.user;
+    }
+    localStorage.setItem(USER_ROLE_KEY, "admin");
+    showNotification("Admin login successful", "success");
+    setTimeout(() => {
+      window.location.href = "dashboard-user.html";
     }, 500);
   } catch (error) {
     showNotification(error.message, "error");
@@ -490,6 +540,9 @@ const handleRegister = async () => {
     if (loginData.user?.username) {
       localStorage.setItem(USERNAME_KEY, loginData.user.username);
       appState.currentUser = loginData.user;
+    }
+    if (loginData.user?.role) {
+      localStorage.setItem(USER_ROLE_KEY, loginData.user.role);
     }
     setTimeout(() => {
       window.location.href = "home.html";
@@ -1098,6 +1151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const form = input.closest(".auth-form");
       if (form?.id === "loginForm") handleLogin();
       if (form?.id === "registerForm") handleRegister();
+      if (form?.id === "adminForm") handleAdminLogin();
     });
   });
 
@@ -1116,6 +1170,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     switchTab("register");
   } else if (authMode === "login") {
     switchTab("login");
+  } else if (authMode === "admin") {
+    switchTab("admin");
   }
 });
 
@@ -1123,6 +1179,7 @@ window.toggleTheme = toggleTheme;
 window.switchTab = switchTab;
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
+window.handleAdminLogin = handleAdminLogin;
 window.showNewThreadModal = showNewThreadModal;
 window.closeNewThreadModal = closeNewThreadModal;
 window.createThread = createThread;

@@ -29,12 +29,14 @@ const getApiBase = () => {
     if (runtimeValue) return runtimeValue;
   }
 
+  // Only allow runtime API overrides in local development to prevent accidental
+  // production traffic redirection through localStorage tampering.
+  const host = typeof window !== "undefined" ? window.location.hostname || "" : "";
+  const isLocalHost = host === "localhost" || host === "127.0.0.1";
   const localValue = normalizeApiBase(localStorage.getItem("api_base_url"));
-  if (localValue) return localValue;
+  if (isLocalHost && localValue) return localValue;
 
   if (typeof window !== "undefined" && window.location?.origin) {
-    const host = window.location.hostname || "";
-    const isLocalHost = host === "localhost" || host === "127.0.0.1";
     const isGithubPages = host.endsWith("github.io");
     const origin = normalizeApiBase(window.location.origin);
 
@@ -150,10 +152,14 @@ const detectIdentity = async () => {
       const me = await requestJson("/api/auth/me", { auth: true });
       dashboardState.authUser = me;
       localStorage.setItem("username", me.username);
+      if (me?.role) {
+        localStorage.setItem("user_role", me.role);
+      }
     } catch {
       // Token may be stale.
       localStorage.removeItem("auth_token");
       localStorage.removeItem("username");
+      localStorage.removeItem("user_role");
     }
   }
 

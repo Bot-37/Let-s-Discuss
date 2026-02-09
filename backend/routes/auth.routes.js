@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, me, register } from "../controllers/auth.controller.js";
+import { adminLogin, login, me, register } from "../controllers/auth.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { createRateLimiter } from "../middleware/rateLimit.middleware.js";
@@ -32,6 +32,27 @@ router.post(
     },
   }),
   register
+);
+
+router.post(
+  "/admin/login",
+  authLimiter,
+  validate({
+    username: {
+      required: true,
+      type: "string",
+      trim: true,
+      minLength: 3,
+      maxLength: 32,
+    },
+    password: {
+      required: true,
+      type: "string",
+      minLength: 8,
+      maxLength: 72,
+    },
+  }),
+  adminLogin
 );
 
 router.post(

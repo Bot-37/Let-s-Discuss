@@ -16,7 +16,15 @@
 - CSRF protection:
   - Double-submit cookie token via `/api/csrf-token`.
   - Required `X-CSRF-Token` header for all unsafe API methods.
-  - Cross-site fetch-site check blocks `sec-fetch-site: cross-site`.
+  - Unsafe requests are only accepted from configured `CORS_ORIGIN` values.
+  - CSRF cookie supports `SameSite=None; Secure` for HTTPS cross-origin deployments.
+- Authorization:
+  - Role-aware JWTs (`user` / `admin`) for access control.
+  - Dedicated super-admin login endpoint at `POST /api/auth/admin/login`.
+  - Admin-only endpoints protected by `requireAdmin`.
+- Secure bootstrap:
+  - Optional env-driven admin account bootstrapping (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
+  - Startup hardening ensures `users.role` exists with safe defaults.
 - Rate limits:
   - Per-endpoint limits with IP/identity keys via `middleware/rateLimit.middleware.js`.
 - Spam guard:

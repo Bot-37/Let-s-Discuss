@@ -1,5 +1,6 @@
 import { db } from "../config/db.js";
 import { normalizePostContent } from "../utils/sanitize.js";
+import { sendSafeError } from "../utils/security.js";
 
 export async function getPosts(req, res) {
   try {
@@ -23,8 +24,9 @@ export async function getPosts(req, res) {
 
     return res.json(rows);
   } catch (error) {
-    console.error("Failed to fetch posts", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return sendSafeError(res, 500, "Internal server error", "Failed to fetch posts", {
+      error: String(error?.message || error),
+    });
   }
 }
 
@@ -52,7 +54,8 @@ export async function createPost(req, res) {
     if (error.code === "23503") {
       return res.status(404).json({ message: "Thread not found" });
     }
-    console.error("Failed to create post", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return sendSafeError(res, 500, "Internal server error", "Failed to create post", {
+      error: String(error?.message || error),
+    });
   }
 }

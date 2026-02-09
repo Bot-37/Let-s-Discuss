@@ -1,5 +1,6 @@
 import { db } from "../config/db.js";
 import { normalizePostContent, sanitizeText } from "../utils/sanitize.js";
+import { sendSafeError } from "../utils/security.js";
 
 export async function getThreads(req, res) {
   try {
@@ -17,8 +18,9 @@ export async function getThreads(req, res) {
     );
     return res.json(rows);
   } catch (error) {
-    console.error("Failed to fetch threads", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return sendSafeError(res, 500, "Internal server error", "Failed to fetch threads", {
+      error: String(error?.message || error),
+    });
   }
 }
 
@@ -45,8 +47,9 @@ export async function getThreadById(req, res) {
 
     return res.json(rows[0]);
   } catch (error) {
-    console.error("Failed to fetch thread", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return sendSafeError(res, 500, "Internal server error", "Failed to fetch thread", {
+      error: String(error?.message || error),
+    });
   }
 }
 
@@ -79,8 +82,9 @@ export async function createThread(req, res) {
     return res.status(201).json(rows[0]);
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Failed to create thread", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return sendSafeError(res, 500, "Internal server error", "Failed to create thread", {
+      error: String(error?.message || error),
+    });
   } finally {
     client.release();
   }

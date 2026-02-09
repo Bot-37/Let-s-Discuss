@@ -19,6 +19,14 @@ function parseCsv(value) {
     .filter(Boolean);
 }
 
+function toSameSite(value, fallback) {
+  const normalized = String(value ?? fallback).trim().toLowerCase();
+  if (normalized === "strict" || normalized === "lax" || normalized === "none") {
+    return normalized;
+  }
+  return fallback;
+}
+
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProduction = nodeEnv === "production";
 const developmentCorsOrigins = [
@@ -34,6 +42,8 @@ const corsOrigins = process.env.CORS_ORIGIN
     : developmentCorsOrigins;
 const dbSsl = toBool(process.env.DB_SSL, isProduction);
 const dbSslRejectUnauthorized = toBool(process.env.DB_SSL_REJECT_UNAUTHORIZED, false);
+const adminUsername = process.env.ADMIN_USERNAME?.trim();
+const adminPassword = process.env.ADMIN_PASSWORD;
 
 const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
 const missing = requiredVars.filter((key) => !process.env[key]);
@@ -50,6 +60,14 @@ if (isProduction && corsOrigins.length === 0) {
   throw new Error("CORS_ORIGIN must be configured in production");
 }
 
+if ((adminUsername && !adminPassword) || (!adminUsername && adminPassword)) {
+  throw new Error("ADMIN_USERNAME and ADMIN_PASSWORD must both be set together");
+}
+
+if (adminPassword && adminPassword.length < 14) {
+  throw new Error("ADMIN_PASSWORD must be at least 14 characters long");
+}
+
 export const env = Object.freeze({
   NODE_ENV: nodeEnv,
   IS_PRODUCTION: isProduction,
@@ -62,9 +80,17 @@ export const env = Object.freeze({
   DB_SSL_REJECT_UNAUTHORIZED: dbSslRejectUnauthorized,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "6h",
+  JWT_ADMIN_EXPIRES_IN: process.env.JWT_ADMIN_EXPIRES_IN ?? "2h",
   TRUST_PROXY: toBool(process.env.TRUST_PROXY, false),
   CORS_ORIGINS: corsOrigins,
   JSON_LIMIT: process.env.JSON_LIMIT ?? "100kb",
+  EXPOSE_VALIDATION_DETAILS: toBool(process.env.EXPOSE_VALIDATION_DETAILS, !isProduction),
   CSRF_COOKIE_NAME: process.env.CSRF_COOKIE_NAME ?? "csrf_token",
   CSRF_MAX_AGE_SEC: toInt(process.env.CSRF_MAX_AGE_SEC, 2 * 60 * 60),
+  CSRF_COOKIE_SAME_SITE: toSameSite(
+    process.env.CSRF_COOKIE_SAME_SITE,
+    isProduction ? "none" : "lax"
+  ),
+  ADMIN_USERNAME: adminUsername || null,
+  ADMIN_PASSWORD: adminPassword || null,
 });

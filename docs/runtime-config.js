@@ -7,4 +7,4 @@
 window.__API_BASE_URL__ =
   window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://localhost:4000"
-    : "https://lets-discuss-backend.onrender.com";
+    : "https://your-service-name.onrender.com";
