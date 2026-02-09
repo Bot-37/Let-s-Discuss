@@ -14,11 +14,20 @@ const resolveApiBaseUrl = () => {
   if (localValue) return localValue;
 
   if (typeof window !== "undefined" && window.location?.origin) {
+    const host = window.location.hostname || "";
+    const isLocalHost = host === "localhost" || host === "127.0.0.1";
+    const isGithubPages = host.endsWith("github.io");
     const origin = normalizeApiBase(window.location.origin);
-    if (origin && origin !== "null") return origin;
+
+    // Never default to same-origin for GitHub Pages, because backend is not hosted there.
+    if (origin && origin !== "null" && isLocalHost && !isGithubPages) {
+      return origin;
+    }
   }
 
-  throw new Error("API base URL is not configured");
+  throw new Error(
+    "API base URL is not configured. Set window.__API_BASE_URL__ in runtime-config.js to your Render backend URL."
+  );
 };
 
 const API_BASE_URL = resolveApiBaseUrl();

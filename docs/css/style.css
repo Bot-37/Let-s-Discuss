@@ -2,7 +2,7 @@
    IMPORTS & FONTS
 ========================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap');
+/* Removed external Google Fonts import to avoid CORS/network failures. */
 
 /* =========================
    CSS VARIABLES (THEMES)
