@@ -371,6 +371,54 @@ const requestJson = async (path, { method = "GET", body, auth = true } = {}) => 
 
 const sanitizeTextInput = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 
+const formatCompactNumber = (value) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "-";
+  // Keep formatting stable across browsers/locales.
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}m`.replace(/\.0m$/, "m");
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`.replace(/\.0k$/, "k");
+  return new Intl.NumberFormat("en-US").format(num);
+};
+
+const updateLandingStats = (stats) => {
+  const active = document.getElementById("statActiveThreads");
+  const anon = document.getElementById("statAnonymousUsers");
+  const posts = document.getElementById("statTotalPosts");
+  if (!active || !anon || !posts) return false;
+
+  active.textContent = formatCompactNumber(stats?.activeThreads);
+  anon.textContent = formatCompactNumber(stats?.anonymousUsers);
+  posts.textContent = formatCompactNumber(stats?.totalPosts);
+  return true;
+};
+
+const initLandingStats = () => {
+  // Only run on index.html (or any page that includes these stat ids).
+  if (
+    !document.getElementById("statActiveThreads") ||
+    !document.getElementById("statAnonymousUsers") ||
+    !document.getElementById("statTotalPosts")
+  ) {
+    return;
+  }
+
+  let timer = null;
+  const refresh = async () => {
+    try {
+      const stats = await requestJson("/api/stats", { method: "GET", auth: false });
+      updateLandingStats(stats);
+    } catch {
+      // Keep the landing page usable even if backend is unavailable.
+    }
+  };
+
+  void refresh();
+  timer = setInterval(refresh, 15_000);
+  window.addEventListener("beforeunload", () => {
+    if (timer) clearInterval(timer);
+  });
+};
+
 const formatRelativeTime = (timestamp) => {
   const value = new Date(timestamp).getTime();
   if (!Number.isFinite(value)) return "just now";
@@ -1078,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadTheme();
   await hydrateCurrentUser();
   syncUserBadge();
+  initLandingStats();
   initializeFilters();
   initAutoExpandTextareas();
 
