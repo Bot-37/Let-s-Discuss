@@ -20,7 +20,11 @@
   - CSRF cookie supports `SameSite=None; Secure` for HTTPS cross-origin deployments.
 - Authorization:
   - Role-aware JWTs (`user` / `admin`) for access control.
+  - Cookie-first auth sessions (`HttpOnly`) with optional Bearer fallback during migration.
+  - Explicit logout endpoint clears the auth cookie (`POST /api/auth/logout`).
   - Super user signs in via the same `/api/auth/login` flow as normal users.
+- Anonymous identity hardening:
+  - Signed anonymous identity cookie prevents client-controlled identity spoofing.
 - Secure bootstrap:
   - Startup hardening ensures `users.role` exists with safe defaults.
   - Enforces a single super user account: `Bot37`.

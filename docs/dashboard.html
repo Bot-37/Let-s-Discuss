@@ -1,433 +1,472 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | Let's Discuss</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#00b4d8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="icon" type="image/png" href="assets/incognito.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="runtime-config.js?v=1"></script>
   <script src="js/app.js?v=1" defer></script>
   <script src="js/dashboard.js?v=1" defer></script>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">
-    <a href="index.html" style="text-decoration: none; color: inherit;">
-      <h1>LET'S DISCUSS</h1>
-    </a>
-  </div>
-  <div class="header-actions">
-    <a href="home.html" class="nav-link">Threads</a>
-    <span class="user-badge" id="userBadge" data-profile-menu="disabled">Loading profile...</span>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
-  </div>
-</header>
+  <header>
+    <div class="logo">
+      <a href="index.html" style="text-decoration: none; color: inherit;">
+        <h1>LET'S DISCUSS</h1>
+      </a>
+    </div>
+    <div class="header-actions">
+      <a href="home.html" class="nav-link">Threads</a>
+      <span class="user-badge" id="userBadge" data-profile-menu="disabled">Loading profile...</span>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false"
+        title="Toggle theme"></button>
+    </div>
+  </header>
 
-<main class="dashboard-page">
-  <!-- Profile Header -->
-  <div class="profile-header">
-    <div class="profile-banner" id="profileBanner">
-      <div class="banner-overlay"></div>
-      <button class="banner-edit-btn" id="bannerEditBtn" style="display: none;">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+  <main class="dashboard-page">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-banner" id="profileBanner">
+        <div class="banner-overlay"></div>
+        <button class="banner-edit-btn" id="bannerEditBtn" style="display: none;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          Change Banner
+        </button>
+      </div>
+
+      <div class="profile-info-container">
+        <div class="profile-avatar" id="profileAvatar">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+          </svg>
+        </div>
+
+        <div class="profile-details">
+          <h1 class="profile-name" id="profileName">Loading profile...</h1>
+          <p class="profile-type" id="profileType">Guest User</p>
+          <p class="profile-bio" id="profileBio">Browsing anonymously. Create an account to customize your profile.</p>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn-outline" onclick="showSettingsModal()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
+            </svg>
+            Settings
+          </button>
+          <button class="btn-primary" id="upgradeBtn" onclick="location.href='login.html'">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Create Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value" id="statThreads">0</div>
+          <div class="stat-label">Threads Started</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value" id="statReplies">0</div>
+          <div class="stat-label">Replies Posted</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value" id="statLikes">0</div>
+          <div class="stat-label">Likes Received</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" stroke="var(--bg-main)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value" id="statJoined">Today</div>
+          <div class="stat-label">Member Since</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="dashboard-tabs">
+      <button class="tab-btn active" data-tab="activity">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
-        Change Banner
+        Activity
+      </button>
+      <button class="tab-btn" data-tab="threads">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        My Threads
+      </button>
+      <button class="tab-btn" data-tab="replies">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+        My Replies
+      </button>
+      <button class="tab-btn" data-tab="saved">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+        Saved
       </button>
     </div>
-    
-    <div class="profile-info-container">
-      <div class="profile-avatar" id="profileAvatar">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-        </svg>
-      </div>
-      
-      <div class="profile-details">
-        <h1 class="profile-name" id="profileName">Loading profile...</h1>
-        <p class="profile-type" id="profileType">Guest User</p>
-        <p class="profile-bio" id="profileBio">Browsing anonymously. Create an account to customize your profile.</p>
-      </div>
-      
-      <div class="profile-actions">
-        <button class="btn-outline" onclick="showSettingsModal()">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+
+    <!-- Tab Content -->
+    <div class="dashboard-content">
+      <!-- Activity Tab -->
+      <div class="tab-content active" id="activityTab">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
-          Settings
-        </button>
-        <button class="btn-primary" id="upgradeBtn" onclick="location.href='login.html'">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          Create Account
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stats Section -->
-  <div class="dashboard-stats">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="statThreads">0</div>
-        <div class="stat-label">Threads Started</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="statReplies">0</div>
-        <div class="stat-label">Replies Posted</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="statLikes">0</div>
-        <div class="stat-label">Likes Received</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 6v6l4 2" stroke="var(--bg-main)" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="statJoined">Today</div>
-        <div class="stat-label">Member Since</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="dashboard-tabs">
-    <button class="tab-btn active" data-tab="activity">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-      </svg>
-      Activity
-    </button>
-    <button class="tab-btn" data-tab="threads">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      My Threads
-    </button>
-    <button class="tab-btn" data-tab="replies">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-      </svg>
-      My Replies
-    </button>
-    <button class="tab-btn" data-tab="saved">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-      </svg>
-      Saved
-    </button>
-  </div>
-
-  <!-- Tab Content -->
-  <div class="dashboard-content">
-    <!-- Activity Tab -->
-    <div class="tab-content active" id="activityTab">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-        <h3>No Recent Activity</h3>
-        <p>Start participating in discussions to see your activity here.</p>
-        <a href="home.html"><button class="btn-primary">Browse Threads</button></a>
-      </div>
-    </div>
-
-    <!-- My Threads Tab -->
-    <div class="tab-content" id="threadsTab">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        <h3>No Threads Yet</h3>
-        <p>You haven't started any discussions yet.</p>
-        <button class="btn-primary" onclick="location.href='home.html?new=1'">Start Your First Thread</button>
-      </div>
-    </div>
-
-    <!-- My Replies Tab -->
-    <div class="tab-content" id="repliesTab">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-        </svg>
-        <h3>No Replies Yet</h3>
-        <p>You haven't replied to any threads yet.</p>
-        <a href="home.html"><button class="btn-primary">Join a Discussion</button></a>
-      </div>
-    </div>
-
-    <!-- Saved Tab -->
-    <div class="tab-content" id="savedTab">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-        </svg>
-        <h3>No Saved Items</h3>
-        <p>Threads and replies you save will appear here.</p>
-      </div>
-    </div>
-  </div>
-</main>
-
-<!-- Settings Modal -->
-<div id="settingsModal" class="modal">
-  <div class="modal-content modal-large">
-    <div class="modal-header">
-      <h3>Settings</h3>
-      <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="settings-layout">
-        <!-- Settings Sidebar -->
-        <div class="settings-sidebar">
-          <button class="settings-nav-btn active" data-setting="appearance">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" fill="none" stroke-width="2"/>
-            </svg>
-            Appearance
-          </button>
-          <button class="settings-nav-btn" data-setting="privacy">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" fill="none" stroke-width="2"/>
-            </svg>
-            Privacy
-          </button>
-          <button class="settings-nav-btn" data-setting="notifications">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" fill="none" stroke-width="2"/>
-            </svg>
-            Notifications
-          </button>
-          <button class="settings-nav-btn" data-setting="account">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" fill="none" stroke-width="2"/>
-            </svg>
-            Account
-          </button>
+          <h3>No Recent Activity</h3>
+          <p>Start participating in discussions to see your activity here.</p>
+          <a href="home.html"><button class="btn-primary">Browse Threads</button></a>
         </div>
+      </div>
 
-        <!-- Settings Content -->
-        <div class="settings-content">
-          <!-- Appearance Settings -->
-          <div class="settings-panel active" id="appearanceSettings">
-            <h4>Appearance</h4>
-            
-            <div class="setting-group">
-              <label class="setting-label">Theme</label>
-              <div class="theme-selector">
-                <button class="theme-option" data-theme="dark">
-                  <div class="theme-preview theme-preview-dark"></div>
-                  <span>Dark</span>
-                </button>
-                <button class="theme-option active" data-theme="auto">
-                  <div class="theme-preview theme-preview-auto"></div>
-                  <span>Auto</span>
-                </button>
-                <button class="theme-option" data-theme="light">
-                  <div class="theme-preview theme-preview-light"></div>
-                  <span>Light</span>
-                </button>
-              </div>
-            </div>
+      <!-- My Threads Tab -->
+      <div class="tab-content" id="threadsTab">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <h3>No Threads Yet</h3>
+          <p>You haven't started any discussions yet.</p>
+          <button class="btn-primary" onclick="location.href='home.html?new=1'">Start Your First Thread</button>
+        </div>
+      </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Font Size</label>
-              <div class="slider-control">
-                <span class="slider-label">Small</span>
-                <input type="range" min="14" max="20" value="16" step="1" id="fontSizeSlider" />
-                <span class="slider-label">Large</span>
-              </div>
-              <span class="setting-hint">Current: <span id="fontSizeValue">16px</span></span>
-            </div>
+      <!-- My Replies Tab -->
+      <div class="tab-content" id="repliesTab">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path
+              d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
+          <h3>No Replies Yet</h3>
+          <p>You haven't replied to any threads yet.</p>
+          <a href="home.html"><button class="btn-primary">Join a Discussion</button></a>
+        </div>
+      </div>
 
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Compact Mode</label>
-                  <p class="setting-hint">Show more content on screen</p>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="compactMode" />
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
+      <!-- Saved Tab -->
+      <div class="tab-content" id="savedTab">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <h3>No Saved Items</h3>
+          <p>Threads and replies you save will appear here.</p>
+        </div>
+      </div>
+    </div>
+  </main>
 
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Animations</label>
-                  <p class="setting-hint">Enable smooth transitions and effects</p>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="animationsEnabled" checked />
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-layout">
+          <!-- Settings Sidebar -->
+          <div class="settings-sidebar">
+            <button class="settings-nav-btn active" data-setting="appearance">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  stroke="currentColor" fill="none" stroke-width="2" />
+              </svg>
+              Appearance
+            </button>
+            <button class="settings-nav-btn" data-setting="privacy">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" fill="none"
+                  stroke-width="2" />
+              </svg>
+              Privacy
+            </button>
+            <button class="settings-nav-btn" data-setting="notifications">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor"
+                  fill="none" stroke-width="2" />
+              </svg>
+              Notifications
+            </button>
+            <button class="settings-nav-btn" data-setting="account">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                  stroke="currentColor" fill="none" stroke-width="2" />
+              </svg>
+              Account
+            </button>
           </div>
 
-          <!-- Privacy Settings -->
-          <div class="settings-panel" id="privacySettings">
-            <h4>Privacy & Safety</h4>
-            
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Show Activity Status</label>
-                  <p class="setting-hint">Let others see when you're online</p>
+          <!-- Settings Content -->
+          <div class="settings-content">
+            <!-- Appearance Settings -->
+            <div class="settings-panel active" id="appearanceSettings">
+              <h4>Appearance</h4>
+
+              <div class="setting-group">
+                <label class="setting-label">Theme</label>
+                <div class="theme-selector">
+                  <button class="theme-option" data-theme="dark">
+                    <div class="theme-preview theme-preview-dark"></div>
+                    <span>Dark</span>
+                  </button>
+                  <button class="theme-option active" data-theme="auto">
+                    <div class="theme-preview theme-preview-auto"></div>
+                    <span>Auto</span>
+                  </button>
+                  <button class="theme-option" data-theme="light">
+                    <div class="theme-preview theme-preview-light"></div>
+                    <span>Light</span>
+                  </button>
                 </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="showActivity" />
-                  <span class="toggle-slider"></span>
-                </label>
+              </div>
+
+              <div class="setting-group">
+                <label class="setting-label">Font Size</label>
+                <div class="slider-control">
+                  <span class="slider-label">Small</span>
+                  <input type="range" min="14" max="20" value="16" step="1" id="fontSizeSlider" />
+                  <span class="slider-label">Large</span>
+                </div>
+                <span class="setting-hint">Current: <span id="fontSizeValue">16px</span></span>
+              </div>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Compact Mode</label>
+                    <p class="setting-hint">Show more content on screen</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="compactMode" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Animations</label>
+                    <p class="setting-hint">Enable smooth transitions and effects</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="animationsEnabled" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Anonymous Browsing</label>
-                  <p class="setting-hint">Always active for guest users</p>
+            <!-- Privacy Settings -->
+            <div class="settings-panel" id="privacySettings">
+              <h4>Privacy & Safety</h4>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Show Activity Status</label>
+                    <p class="setting-hint">Let others see when you're online</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="showActivity" />
+                    <span class="toggle-slider"></span>
+                  </label>
                 </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="anonymousBrowsing" checked disabled />
-                  <span class="toggle-slider"></span>
-                </label>
+              </div>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Anonymous Browsing</label>
+                    <p class="setting-hint">Always active for guest users</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="anonymousBrowsing" checked disabled />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-group">
+                <label class="setting-label">Blocked Users</label>
+                <p class="setting-hint">You haven't blocked anyone yet.</p>
               </div>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Blocked Users</label>
-              <p class="setting-hint">You haven't blocked anyone yet.</p>
-            </div>
-          </div>
+            <!-- Notification Settings -->
+            <div class="settings-panel" id="notificationsSettings">
+              <h4>Notifications</h4>
 
-          <!-- Notification Settings -->
-          <div class="settings-panel" id="notificationsSettings">
-            <h4>Notifications</h4>
-            
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Thread Replies</label>
-                  <p class="setting-hint">Get notified when someone replies to your threads</p>
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Thread Replies</label>
+                    <p class="setting-hint">Get notified when someone replies to your threads</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifyReplies" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
                 </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="notifyReplies" checked />
-                  <span class="toggle-slider"></span>
-                </label>
+              </div>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Mentions</label>
+                    <p class="setting-hint">Get notified when someone mentions you</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifyMentions" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-group">
+                <div class="setting-toggle">
+                  <div>
+                    <label class="setting-label">Likes</label>
+                    <p class="setting-hint">Get notified when someone likes your content</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifyLikes" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Mentions</label>
-                  <p class="setting-hint">Get notified when someone mentions you</p>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="notifyMentions" checked />
-                  <span class="toggle-slider"></span>
-                </label>
+            <!-- Account Settings -->
+            <div class="settings-panel" id="accountSettings">
+              <h4>Account</h4>
+
+              <div class="setting-group">
+                <label class="setting-label">Account Type</label>
+                <p class="setting-value">Guest (Anonymous)</p>
+                <p class="setting-hint">Create an account to unlock more features</p>
+                <button class="btn-primary" onclick="location.href='login.html'">Create Account</button>
               </div>
-            </div>
 
-            <div class="setting-group">
-              <div class="setting-toggle">
-                <div>
-                  <label class="setting-label">Likes</label>
-                  <p class="setting-hint">Get notified when someone likes your content</p>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="notifyLikes" />
-                  <span class="toggle-slider"></span>
-                </label>
+              <div class="setting-group">
+                <label class="setting-label">Session</label>
+                <p class="setting-hint">Clear your browsing data and start fresh</p>
+                <button class="btn-outline btn-danger" onclick="clearSession()">Clear Session Data</button>
               </div>
-            </div>
-          </div>
-
-          <!-- Account Settings -->
-          <div class="settings-panel" id="accountSettings">
-            <h4>Account</h4>
-            
-            <div class="setting-group">
-              <label class="setting-label">Account Type</label>
-              <p class="setting-value">Guest (Anonymous)</p>
-              <p class="setting-hint">Create an account to unlock more features</p>
-              <button class="btn-primary" onclick="location.href='login.html'">Create Account</button>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Session</label>
-              <p class="setting-hint">Clear your browsing data and start fresh</p>
-              <button class="btn-outline btn-danger" onclick="clearSession()">Clear Session Data</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Banner Upload Modal -->
-<div id="bannerUploadModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Change Banner</h3>
-      <button class="modal-close" onclick="closeBannerUploadModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="upload-area" id="bannerUploadArea">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-        </svg>
-        <p>Click to upload or drag and drop</p>
-        <span class="upload-hint">PNG, JPG up to 5MB</span>
-        <input type="file" id="bannerInput" accept="image/*" style="display: none;" />
+  <!-- Banner Upload Modal -->
+  <div id="bannerUploadModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Change Banner</h3>
+        <button class="modal-close" onclick="closeBannerUploadModal()">&times;</button>
       </div>
-      <div id="bannerPreview" class="banner-preview" style="display: none;">
-        <img id="bannerPreviewImg" src="" alt="Banner preview" />
-      </div>
-      <div class="modal-actions">
-        <button class="btn-outline" onclick="closeBannerUploadModal()">Cancel</button>
-        <button class="btn-primary" id="saveBannerBtn" onclick="saveBanner()" style="display: none;">Save Banner</button>
+      <div class="modal-body">
+        <div class="upload-area" id="bannerUploadArea">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+          </svg>
+          <p>Click to upload or drag and drop</p>
+          <span class="upload-hint">PNG, JPG up to 5MB</span>
+          <input type="file" id="bannerInput" accept="image/*" style="display: none;" />
+        </div>
+        <div id="bannerPreview" class="banner-preview" style="display: none;">
+          <img id="bannerPreviewImg" src="" alt="Banner preview" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-outline" onclick="closeBannerUploadModal()">Cancel</button>
+          <button class="btn-primary" id="saveBannerBtn" onclick="saveBanner()" style="display: none;">Save
+            Banner</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
+
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker registered successfully');
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 
 </body>
+
 </html>

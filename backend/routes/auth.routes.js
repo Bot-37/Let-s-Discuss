@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, me, register } from "../controllers/auth.controller.js";
+import { login, logout, me, register } from "../controllers/auth.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { createRateLimiter } from "../middleware/rateLimit.middleware.js";
@@ -60,6 +60,12 @@ router.get(
   requireAuth,
   createRateLimiter({ windowMs: 60_000, max: 120, keyPrefix: "auth-me" }),
   me
+);
+
+router.post(
+  "/logout",
+  createRateLimiter({ windowMs: 60_000, max: 60, keyPrefix: "auth-logout" }),
+  logout
 );
 
 export default router;

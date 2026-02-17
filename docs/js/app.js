@@ -38,6 +38,8 @@ const USERNAME_KEY = "username";
 const USER_ROLE_KEY = "user_role";
 const ANON_ID_KEY = "anon_id";
 const CSRF_TOKEN_KEY = "csrf_token";
+const CSRF_COOKIE_NAME_KEY = "csrf_cookie_name";
+const DEFAULT_CSRF_COOKIE_NAME = "csrf_token";
 const THREAD_CACHE_KEY = "thread_ids";
 
 const appState = {
@@ -45,6 +47,9 @@ const appState = {
   activeFilter: "hot",
   currentThreadId: null,
   currentUser: null,
+  threadIdIndex: new Map(),
+  threadSortCache: new Map(),
+  threadsVersion: 0,
 };
 
 // ==========================
@@ -107,6 +112,7 @@ const syncThemeToggles = () => {
 const getAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
 const getAnonId = () => localStorage.getItem(ANON_ID_KEY);
 const getStoredUsername = () => localStorage.getItem(USERNAME_KEY);
+const hasAuthHint = () => Boolean(appState.currentUser?.id || getStoredUsername() || getAuthToken());
 
 const isUnsafeMethod = (method) => ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
@@ -139,11 +145,13 @@ const clearAuthSession = () => {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(USER_ROLE_KEY);
+  sessionStorage.removeItem(CSRF_TOKEN_KEY);
+  sessionStorage.removeItem(CSRF_COOKIE_NAME_KEY);
   appState.currentUser = null;
 };
 
 const openDashboard = () => {
-  window.location.href = getAuthToken() ? "dashboard-user.html" : "dashboard.html";
+  window.location.href = hasAuthHint() ? "dashboard-user.html" : "dashboard.html";
 };
 
 const showAuthChoiceModal = () => {
@@ -171,19 +179,20 @@ const goToLoginPage = (mode = "login") => {
   window.location.href = `login.html?mode=${safeMode}`;
 };
 
-const signOut = () => {
-  clearAuthSession();
-  syncUserBadge();
-  setReplyIdentity();
-  showNotification("Signed out", "success");
+const signOut = async () => {
+  try {
+    await requestJson("/api/auth/logout", { method: "POST", auth: false });
+  } catch {
+    // Local cleanup still proceeds if network logout fails.
+  } finally {
+    clearAuthSession();
+    syncUserBadge();
+    setReplyIdentity();
+    showNotification("Signed out", "success");
+  }
 };
 
 const hydrateCurrentUser = async () => {
-  if (!getAuthToken()) {
-    appState.currentUser = null;
-    return;
-  }
-
   try {
     const user = await requestJson("/api/auth/me", { method: "GET", auth: true });
     appState.currentUser = user;
@@ -194,9 +203,16 @@ const hydrateCurrentUser = async () => {
       localStorage.setItem(USER_ROLE_KEY, user.role);
     }
   } catch (error) {
-    if (String(error.message || "").toLowerCase().includes("invalid")) {
+    const msg = String(error.message || "").toLowerCase();
+    if (
+      msg.includes("invalid") ||
+      msg.includes("expired") ||
+      msg.includes("missing") ||
+      msg.includes("authentication token")
+    ) {
       clearAuthSession();
     }
+    appState.currentUser = null;
   }
 };
 
@@ -265,8 +281,7 @@ const syncUserBadge = () => {
   if (!badge) return;
   const disableProfileMenu = badge.dataset.profileMenu === "disabled";
 
-  const token = getAuthToken();
-  if (token) {
+  if (hasAuthHint()) {
     const username = getCurrentUsername();
     badge.textContent = username || "Loading profile...";
     if (!disableProfileMenu) {
@@ -301,29 +316,78 @@ const syncUserBadge = () => {
   badge.textContent = formatAnonymousTag(getAnonId());
 };
 
+const getCsrfCookieName = () => sessionStorage.getItem(CSRF_COOKIE_NAME_KEY) || DEFAULT_CSRF_COOKIE_NAME;
+
+const setCsrfCookieName = (value) => {
+  if (typeof value !== "string") return;
+  const normalized = value.trim();
+  if (!normalized) return;
+  sessionStorage.setItem(CSRF_COOKIE_NAME_KEY, normalized);
+};
+
 const ensureCsrfToken = async () => {
+  const cookieName = getCsrfCookieName();
   const inStorage = sessionStorage.getItem(CSRF_TOKEN_KEY);
-  const fromCookie = readCookie("csrf_token");
+  const fromCookie = readCookie(cookieName);
   if (inStorage && fromCookie && inStorage === fromCookie) {
     return inStorage;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
-    method: "GET",
-    credentials: "include",
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
+      method: "GET",
+      credentials: "include",
+    });
+  } catch {
+    throw new Error(
+      "Could not reach backend security endpoint. Verify runtime-config.js points to your Render backend URL."
+    );
+  }
 
   if (!response.ok) {
-    throw new Error("Unable to initialize CSRF protection");
+    throw new Error(`Unable to initialize CSRF protection (${response.status})`);
   }
 
   const data = await response.json();
+  setCsrfCookieName(data?.csrfCookieName);
   if (!data.csrfToken) {
     throw new Error("CSRF token endpoint did not return a token");
   }
 
   sessionStorage.setItem(CSRF_TOKEN_KEY, data.csrfToken);
+  const latestCookieName = getCsrfCookieName();
+  const cookieToken = readCookie(latestCookieName);
+  if (!cookieToken) {
+    throw new Error(
+      "Security cookie was blocked by the browser. Check HTTPS + cookie settings (SameSite=None; Secure) and CORS_ORIGIN."
+    );
+  }
+  if (cookieToken !== data.csrfToken) {
+    sessionStorage.removeItem(CSRF_TOKEN_KEY);
+    throw new Error("Security token mismatch. Refresh and try again.");
+  }
   return data.csrfToken;
+};
+
+const runAuthPreflight = async () => {
+  let healthResponse;
+  try {
+    healthResponse = await fetch(`${API_BASE_URL}/health`, {
+      method: "GET",
+      credentials: "include",
+    });
+  } catch {
+    throw new Error(
+      "Backend is unreachable. Verify runtime-config.js uses your live Render backend URL."
+    );
+  }
+
+  if (!healthResponse.ok) {
+    throw new Error(`Backend health check failed (${healthResponse.status})`);
+  }
+
+  await ensureCsrfToken();
 };
 
 const requestJson = async (path, { method = "GET", body, auth = true } = {}) => {
@@ -346,12 +410,17 @@ const requestJson = async (path, { method = "GET", body, auth = true } = {}) => 
     headers["X-CSRF-Token"] = csrfToken;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: upperMethod,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: upperMethod,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Network request failed. Verify backend URL and CORS configuration.");
+  }
 
   updateAnonIdFromHeaders(response.headers);
 
@@ -436,6 +505,7 @@ const formatRelativeTime = (timestamp) => {
 
 const persistThreadIds = (threads) => {
   const ids = threads.map((thread) => thread.id);
+  appState.threadIdIndex = new Map(ids.map((id, index) => [id, index]));
   sessionStorage.setItem(THREAD_CACHE_KEY, JSON.stringify(ids));
 };
 
@@ -476,6 +546,47 @@ const switchTab = (tab) => {
 // AUTH HANDLERS
 // ==========================
 
+const finalizeLoginSession = async (authPayload) => {
+  if (authPayload?.user?.username) {
+    localStorage.setItem(USERNAME_KEY, authPayload.user.username);
+    appState.currentUser = authPayload.user;
+  }
+  if (authPayload?.user?.role) {
+    localStorage.setItem(USER_ROLE_KEY, authPayload.user.role);
+  }
+
+  // Prefer cookie-based session. Keep Bearer only as migration fallback if cookie login is blocked.
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+
+  let cookieSessionOk = false;
+  try {
+    const me = await requestJson("/api/auth/me", { method: "GET", auth: false });
+    if (me?.username) {
+      localStorage.setItem(USERNAME_KEY, me.username);
+      appState.currentUser = me;
+    }
+    if (me?.role) {
+      localStorage.setItem(USER_ROLE_KEY, me.role);
+    }
+    cookieSessionOk = true;
+  } catch {
+    cookieSessionOk = false;
+  }
+
+  if (!cookieSessionOk && authPayload?.token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, authPayload.token);
+    showNotification(
+      "Secure auth cookie was blocked. Using temporary token fallback; check Render cookie/CORS settings.",
+      "warning"
+    );
+    return;
+  }
+
+  if (!cookieSessionOk) {
+    throw new Error("Login succeeded but session verification failed. Check cookie configuration.");
+  }
+};
+
 const handleLogin = async () => {
   const username = sanitizeTextInput(document.getElementById("loginUsername")?.value);
   const password = document.getElementById("loginPassword")?.value;
@@ -486,21 +597,14 @@ const handleLogin = async () => {
   }
 
   try {
-    await ensureCsrfToken();
+    await runAuthPreflight();
     const data = await requestJson("/api/auth/login", {
       method: "POST",
       auth: false,
       body: { username, password },
     });
 
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    if (data.user?.username) {
-      localStorage.setItem(USERNAME_KEY, data.user.username);
-      appState.currentUser = data.user;
-    }
-    if (data.user?.role) {
-      localStorage.setItem(USER_ROLE_KEY, data.user.role);
-    }
+    await finalizeLoginSession(data);
     showNotification("Login successful", "success");
     setTimeout(() => {
       window.location.href = "home.html";
@@ -531,7 +635,7 @@ const handleRegister = async () => {
   }
 
   try {
-    await ensureCsrfToken();
+    await runAuthPreflight();
     await requestJson("/api/auth/register", {
       method: "POST",
       auth: false,
@@ -544,14 +648,7 @@ const handleRegister = async () => {
       auth: false,
       body: { username, password },
     });
-    localStorage.setItem(AUTH_TOKEN_KEY, loginData.token);
-    if (loginData.user?.username) {
-      localStorage.setItem(USERNAME_KEY, loginData.user.username);
-      appState.currentUser = loginData.user;
-    }
-    if (loginData.user?.role) {
-      localStorage.setItem(USER_ROLE_KEY, loginData.user.role);
-    }
+    await finalizeLoginSession(loginData);
     setTimeout(() => {
       window.location.href = "home.html";
     }, 500);
@@ -565,15 +662,23 @@ const handleRegister = async () => {
 // ==========================
 
 const sortThreads = (threads, filter) => {
+  const cacheKey = `${filter}:${appState.threadsVersion}`;
+  const cached = appState.threadSortCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const list = [...threads];
 
   if (filter === "new") {
     list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    appState.threadSortCache.set(cacheKey, list);
     return list;
   }
 
   if (filter === "top") {
     list.sort((a, b) => (b.post_count || 0) - (a.post_count || 0));
+    appState.threadSortCache.set(cacheKey, list);
     return list;
   }
 
@@ -582,6 +687,7 @@ const sortThreads = (threads, filter) => {
     if (countDiff !== 0) return countDiff;
     return new Date(b.last_activity_at || b.created_at) - new Date(a.last_activity_at || a.created_at);
   });
+  appState.threadSortCache.set(cacheKey, list);
   return list;
 };
 
@@ -688,6 +794,8 @@ const loadThreadsPage = async () => {
 
   try {
     appState.threads = await requestJson("/api/threads", { method: "GET", auth: false });
+    appState.threadsVersion += 1;
+    appState.threadSortCache.clear();
     persistThreadIds(appState.threads);
     renderThreads();
   } catch (error) {
@@ -970,7 +1078,10 @@ const initThreadControls = async () => {
     }
 
     if (ids.length > 1) {
-      const index = Math.max(ids.indexOf(currentId), 0);
+      if (!appState.threadIdIndex.size || appState.threadIdIndex.size !== ids.length) {
+        appState.threadIdIndex = new Map(ids.map((id, index) => [id, index]));
+      }
+      const index = appState.threadIdIndex.get(currentId) ?? 0;
       const nextId = ids[(index + 1) % ids.length];
       nextThreadBtn.onclick = () => {
         window.location.href = `thread.html?id=${nextId}`;

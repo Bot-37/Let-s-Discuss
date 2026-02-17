@@ -4,9 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Let's Discuss — Anonymous Forums</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Speak freely. Stay unknown. Share knowledge and connect without compromising your identity." />
+  <meta name="theme-color" content="#00b4d8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Let's Discuss" />
+  
   <link rel="icon" type="image/png" href="assets/incognito.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="runtime-config.js?v=1"></script>
+  <script src="js/intro-animation.js"></script>
+  <script src="js/pwa-install.js" defer></script>
   <script src="js/app.js?v=1" defer></script>
 </head>
 <body>
@@ -90,6 +102,21 @@
 <footer>
   <p>No data collection. No user tracking. No corporate interests.</p>
 </footer>
+
+<script>
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
+</script>
 
 </body>
 </html>

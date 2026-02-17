@@ -1,75 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thread | Let's Discuss</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#00b4d8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="icon" type="image/png" href="assets/incognito.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="runtime-config.js?v=1"></script>
   <script src="js/app.js?v=1" defer></script>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">
-    <a href="home.html" style="text-decoration: none; color: inherit;">
-      <h1>LET'S DISCUSS</h1>
-    </a>
-  </div>
-  <div class="header-actions">
-    <a href="dashboard.html" class="nav-link" onclick="event.preventDefault(); openDashboard();">Dashboard</a>
-    <span class="user-badge">Anonymous #A91F</span>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
-  </div>
-</header>
-
-<main class="thread-page">
-  <div class="breadcrumb">
-    <a href="home.html">← Back to threads</a>
-  </div>
-
-  <div class="thread-header-section">
-    <h1 id="threadTitle" class="thread-title">Loading thread...</h1>
-    <div class="thread-stats">
-      <span id="threadRepliesStat" class="stat">0 replies</span>
-      <span id="threadPostsStat" class="stat">0 posts</span>
-      <span id="threadStartedStat" class="stat">Started recently</span>
+  <header>
+    <div class="logo">
+      <a href="home.html" style="text-decoration: none; color: inherit;">
+        <h1>LET'S DISCUSS</h1>
+      </a>
     </div>
-  </div>
-
-  <div id="postsContainer" class="posts-container"></div>
-
-  <!-- Reply Box -->
-  <div class="reply-box">
-    <div class="reply-header">
-      <span>Posting as <strong id="replyAuthor">Anonymous</strong></span>
+    <div class="header-actions">
+      <a href="dashboard.html" class="nav-link" onclick="event.preventDefault(); openDashboard();">Dashboard</a>
+      <span class="user-badge">Anonymous #A91F</span>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false"
+        title="Toggle theme"></button>
     </div>
-    <textarea id="replyContent" placeholder="Share your perspective..." rows="4"></textarea>
-    <div class="reply-actions">
-      <div class="reply-tips">
-        <span class="tip">💡 Be respectful</span>
-        <span class="tip">💬 Stay on topic</span>
+  </header>
+
+  <main class="thread-page">
+    <div class="breadcrumb">
+      <a href="home.html">← Back to threads</a>
+    </div>
+
+    <div class="thread-header-section">
+      <h1 id="threadTitle" class="thread-title">Loading thread...</h1>
+      <div class="thread-stats">
+        <span id="threadRepliesStat" class="stat">0 replies</span>
+        <span id="threadPostsStat" class="stat">0 posts</span>
+        <span id="threadStartedStat" class="stat">Started recently</span>
       </div>
-      <button class="btn-primary" onclick="submitReply()">Post Reply</button>
     </div>
-  </div>
 
-  <div class="thread-fab-stack" aria-label="Thread controls">
-    <button id="nextThreadBtn" class="floating-action next-thread-btn" type="button">
-      Next Thread →
-    </button>
-    <button
-      id="scrollTopBtn"
-      class="floating-action scroll-top-btn"
-      type="button"
-      aria-label="Scroll to top"
-      title="Scroll to top"
-    >
-      ↑
-    </button>
-  </div>
-</main>
+    <div id="postsContainer" class="posts-container"></div>
+
+    <!-- Reply Box -->
+    <div class="reply-box">
+      <div class="reply-header">
+        <span>Posting as <strong id="replyAuthor">Anonymous</strong></span>
+      </div>
+      <textarea id="replyContent" placeholder="Share your perspective..." rows="4"></textarea>
+      <div class="reply-actions">
+        <div class="reply-tips">
+          <span class="tip">💡 Be respectful</span>
+          <span class="tip">💬 Stay on topic</span>
+        </div>
+        <button class="btn-primary" onclick="submitReply()">Post Reply</button>
+      </div>
+    </div>
+
+    <div class="thread-fab-stack" aria-label="Thread controls">
+      <button id="nextThreadBtn" class="floating-action next-thread-btn" type="button">
+        Next Thread →
+      </button>
+      <button id="scrollTopBtn" class="floating-action scroll-top-btn" type="button" aria-label="Scroll to top"
+        title="Scroll to top">
+        ↑
+      </button>
+    </div>
+  </main>
+
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker registered successfully');
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 
 </body>
+
 </html>

@@ -8,13 +8,30 @@ This document explains the security controls implemented in the backend and wher
   - `controllers/auth.controller.js`
 - Token verification and role checks:
   - `middleware/auth.middleware.js`
+- Cookie/session helpers:
+  - `utils/cookies.js`
 
 ### Role model
 
 - `users.role` is `user` or `admin`.
 - Regular login (`/api/auth/login`) accepts both roles.
+- Login sets an `HttpOnly` auth cookie (`AUTH_COOKIE_NAME`).
+- `POST /api/auth/logout` clears the auth cookie.
+- `GET /api/auth/me` reads auth from cookie first, then optional Bearer fallback.
 - Super user uses the regular login flow and is identified by role.
 - JWT includes `{ uid, role }`.
+
+## Anonymous Identity Hardening
+
+- Anonymous identity middleware:
+  - `middleware/anon.middleware.js`
+- Signed anon cookie logic:
+  - `utils/anon.js`
+
+Behavior:
+- Anonymous identity is stored in a signed cookie (`ANON_COOKIE_NAME`).
+- Client-provided anon headers are no longer trusted for identity.
+- `X-Anon-Id` is still returned for UI display.
 
 ## Super Admin Bootstrap
 
@@ -39,6 +56,7 @@ Behavior:
 
 Behavior:
 - CSRF token is issued via `/api/csrf-token`.
+- CSRF response returns `{ csrfToken, csrfCookieName }`.
 - Unsafe methods require `X-CSRF-Token` matching CSRF cookie.
 - Unsafe requests are accepted only from configured origins.
 - Cross-origin deployments should use `CSRF_COOKIE_SAME_SITE=none` with HTTPS.
@@ -61,5 +79,10 @@ Behavior:
 - `NODE_ENV=production`
 - `CORS_ORIGIN=https://<your-frontend-origin>`
 - `CSRF_COOKIE_SAME_SITE=none`
+- `CSRF_COOKIE_SECURE=true`
+- `AUTH_COOKIE_SAME_SITE=none`
+- `AUTH_COOKIE_SECURE=true`
+- `AUTH_COOKIE_PARTITIONED=true`
+- `TRUST_PROXY=true` (Render)
 - `EXPOSE_VALIDATION_DETAILS=false`
 - `ADMIN_PASSWORD=<long-random-password>`

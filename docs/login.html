@@ -1,92 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In | Let's Discuss</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#00b4d8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="icon" type="image/png" href="assets/incognito.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="runtime-config.js?v=1"></script>
   <script src="js/app.js?v=1" defer></script>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">
-    <a href="index.html" style="text-decoration: none; color: inherit;">
-      <h1>LET'S DISCUSS</h1>
-    </a>
-  </div>
-  <div class="header-actions">
-    <a href="dashboard.html" class="nav-link" onclick="event.preventDefault(); openDashboard();">Dashboard</a>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>
-  </div>
-</header>
-
-<main class="auth-page">
-  <div class="auth-container">
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+  <header>
+    <div class="logo">
+      <a href="index.html" style="text-decoration: none; color: inherit;">
+        <h1>LET'S DISCUSS</h1>
+      </a>
     </div>
+    <div class="header-actions">
+      <a href="dashboard.html" class="nav-link" onclick="event.preventDefault(); openDashboard();">Dashboard</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false"
+        title="Toggle theme"></button>
+    </div>
+  </header>
 
-    <!-- Login Form -->
-    <div id="loginForm" class="auth-form active">
-      <h2>Welcome Back</h2>
-      <p class="auth-subtitle">Enter your credentials to continue</p>
-
-      <div class="form-group">
-        <label for="loginUsername">Username</label>
-        <input type="text" id="loginUsername" placeholder="anonymous_user" autocomplete="username" />
+  <main class="auth-page">
+    <div class="auth-container">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
       </div>
 
-      <div class="form-group">
-        <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+      <!-- Login Form -->
+      <div id="loginForm" class="auth-form active">
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Enter your credentials to continue</p>
+
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input type="text" id="loginUsername" placeholder="anonymous_user" autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <button class="btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+
+        <div class="auth-info">
+          <p>🔒 No email required. No password recovery.</p>
+          <p>You own your anonymity — and the responsibility that comes with it.</p>
+        </div>
       </div>
 
-      <button class="btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+      <!-- Register Form -->
+      <div id="registerForm" class="auth-form">
+        <h2>Create Account</h2>
+        <p class="auth-subtitle">Choose your anonymous identity</p>
 
-      <div class="auth-info">
-        <p>🔒 No email required. No password recovery.</p>
-        <p>You own your anonymity — and the responsibility that comes with it.</p>
+        <div class="form-group">
+          <label for="registerUsername">Username</label>
+          <input type="text" id="registerUsername" placeholder="Choose a username" autocomplete="username" />
+          <span class="input-hint">This will be your persistent anonymous ID</span>
+        </div>
+
+        <div class="form-group">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" placeholder="Create a strong password"
+            autocomplete="new-password" />
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Re-enter your password"
+            autocomplete="new-password" />
+        </div>
+
+        <button class="btn-primary btn-full" onclick="handleRegister()">Create Account</button>
+
+        <div class="auth-info">
+          <p>⚠️ <strong>Important:</strong> There is no password recovery.</p>
+          <p>Store your credentials safely. Once lost, they cannot be recovered.</p>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        <a href="home.html" class="text-link">Continue as anonymous guest →</a>
       </div>
     </div>
+  </main>
 
-    <!-- Register Form -->
-    <div id="registerForm" class="auth-form">
-      <h2>Create Account</h2>
-      <p class="auth-subtitle">Choose your anonymous identity</p>
-
-      <div class="form-group">
-        <label for="registerUsername">Username</label>
-        <input type="text" id="registerUsername" placeholder="Choose a username" autocomplete="username" />
-        <span class="input-hint">This will be your persistent anonymous ID</span>
-      </div>
-
-      <div class="form-group">
-        <label for="registerPassword">Password</label>
-        <input type="password" id="registerPassword" placeholder="Create a strong password" autocomplete="new-password" />
-      </div>
-
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password" />
-      </div>
-
-      <button class="btn-primary btn-full" onclick="handleRegister()">Create Account</button>
-
-      <div class="auth-info">
-        <p>⚠️ <strong>Important:</strong> There is no password recovery.</p>
-        <p>Store your credentials safely. Once lost, they cannot be recovered.</p>
-      </div>
-    </div>
-
-    <div class="auth-footer">
-      <a href="home.html" class="text-link">Continue as anonymous guest →</a>
-    </div>
-  </div>
-</main>
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker registered successfully');
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 
 </body>
+
 </html>

@@ -1,50 +1,30 @@
 import crypto from "crypto";
 import { env } from "../config/env.js";
+import { appendSetCookie, parseCookies, serializeCookie } from "../utils/cookies.js";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
-function parseCookies(cookieHeader = "") {
-  const jar = {};
-  for (const pair of cookieHeader.split(";")) {
-    const [rawKey, ...rawValue] = pair.trim().split("=");
-    if (!rawKey) continue;
-    jar[rawKey] = decodeURIComponent(rawValue.join("="));
-  }
-  return jar;
-}
-
-function appendSetCookie(res, cookieValue) {
-  const current = res.getHeader("Set-Cookie");
-  if (!current) {
-    res.setHeader("Set-Cookie", [cookieValue]);
-    return;
-  }
-  const list = Array.isArray(current) ? current : [String(current)];
-  list.push(cookieValue);
-  res.setHeader("Set-Cookie", list);
-}
-
-function buildCookie(name, value, maxAgeSec) {
-  const sameSite = env.CSRF_COOKIE_SAME_SITE;
-  const sameSiteValue = sameSite.charAt(0).toUpperCase() + sameSite.slice(1);
-  const parts = [
-    `${name}=${encodeURIComponent(value)}`,
-    "Path=/",
-    `SameSite=${sameSiteValue}`,
-    `Max-Age=${maxAgeSec}`,
-  ];
-
-  if (env.NODE_ENV === "production" || sameSite === "none") {
-    parts.push("Secure");
-  }
-
-  return parts.join("; ");
+function tokensEqual(left, right) {
+  if (typeof left !== "string" || typeof right !== "string") return false;
+  if (left.length === 0 || right.length === 0) return false;
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 export function issueCsrfToken(req, res) {
   const token = crypto.randomBytes(32).toString("hex");
-  appendSetCookie(res, buildCookie(env.CSRF_COOKIE_NAME, token, env.CSRF_MAX_AGE_SEC));
-  res.status(200).json({ csrfToken: token });
+  appendSetCookie(
+    res,
+    serializeCookie(env.CSRF_COOKIE_NAME, token, {
+      path: "/",
+      sameSite: env.CSRF_COOKIE_SAME_SITE,
+      secure: env.CSRF_COOKIE_SECURE,
+      maxAge: env.CSRF_MAX_AGE_SEC,
+    })
+  );
+  res.status(200).json({ csrfToken: token, csrfCookieName: env.CSRF_COOKIE_NAME });
 }
 
 export function csrfProtection(req, res, next) {
@@ -52,9 +32,8 @@ export function csrfProtection(req, res, next) {
   if (req.path === "/csrf-token" || req.path === "/api/csrf-token") return next();
 
   const allowedOrigins = new Set(env.CORS_ORIGINS);
-  const allowAnyOrigin = allowedOrigins.has("*");
   const origin = req.headers.origin;
-  if (origin && !allowAnyOrigin && !allowedOrigins.has(origin)) {
+  if (origin && !allowedOrigins.has(origin)) {
     return res.status(403).json({ message: "Origin is not allowed" });
   }
 
@@ -65,9 +44,10 @@ export function csrfProtection(req, res, next) {
 
   const cookies = parseCookies(req.headers.cookie);
   const cookieToken = cookies[env.CSRF_COOKIE_NAME];
-  const headerToken = req.headers["x-csrf-token"];
+  const rawHeaderToken = req.headers["x-csrf-token"];
+  const headerToken = Array.isArray(rawHeaderToken) ? rawHeaderToken[0] : rawHeaderToken;
 
-  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+  if (!cookieToken || !headerToken || !tokensEqual(cookieToken, headerToken)) {
     return res.status(403).json({ message: "Invalid CSRF token" });
   }
 

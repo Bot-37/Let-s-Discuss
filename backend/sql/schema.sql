@@ -26,3 +26,4 @@ CREATE TABLE posts (
 CREATE INDEX IF NOT EXISTS idx_threads_created_at ON threads(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_thread_created_at ON posts(thread_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_author_ref ON posts(author_ref);
+CREATE INDEX IF NOT EXISTS idx_posts_author_identity ON posts(author_type, author_ref, created_at DESC);

@@ -1,11 +1,22 @@
 import crypto from "crypto";
 
 const state = new Map();
+let gcCounter = 0;
 
 function identityKey(req) {
   const uid = req.user?.id;
-  const anon = req.anonId || req.headers["x-anon-id"];
+  const anon = req.anonId;
   return uid || anon || req.ip || "unknown";
+}
+
+function collectExpired(now) {
+  gcCounter += 1;
+  if (gcCounter % 250 !== 0) return;
+  for (const [key, value] of state.entries()) {
+    if (now > value.expiresAt) {
+      state.delete(key);
+    }
+  }
 }
 
 export function createSpamGuard({
@@ -19,12 +30,14 @@ export function createSpamGuard({
     if (req.user?.role === "admin") return next();
 
     const now = Date.now();
+    collectExpired(now);
     const key = `${keyPrefix}:${identityKey(req)}`;
     const content = String(getPayload(req) ?? "");
     const fingerprint = crypto.createHash("sha256").update(content).digest("hex");
+    const ttlMs = Math.max(duplicateWindowMs, minIntervalMs) * 2;
 
     const prev = state.get(key);
-    if (prev) {
+    if (prev && now <= prev.expiresAt) {
       const sinceLast = now - prev.lastAt;
       const sinceDuplicate = now - prev.lastDuplicateAt;
 
@@ -41,6 +54,7 @@ export function createSpamGuard({
       lastAt: now,
       lastFingerprint: fingerprint,
       lastDuplicateAt: now,
+      expiresAt: now + ttlMs,
     });
 
     return next();

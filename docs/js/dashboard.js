@@ -13,8 +13,17 @@ const dashboardState = {
   },
   authUser: null,
   identity: null,
-  threads: [],
-  postsByThread: new Map(),
+  dashboardSummary: {
+    summary: {
+      threadsStarted: 0,
+      repliesPosted: 0,
+      totalPosts: 0,
+    },
+    startedThreads: [],
+    replies: [],
+    activity: [],
+  },
+  threadLookup: new Map(),
   pollTimer: null,
 };
 
@@ -54,6 +63,61 @@ const getApiBase = () => {
 const getAuthToken = () => localStorage.getItem("auth_token");
 const getStoredUsername = () => localStorage.getItem("username");
 const getAnonId = () => localStorage.getItem("anon_id");
+const CSRF_TOKEN_KEY = "csrf_token";
+const CSRF_COOKIE_NAME_KEY = "csrf_cookie_name";
+const DEFAULT_CSRF_COOKIE_NAME = "csrf_token";
+
+const isUnsafeMethod = (method) => ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+
+const readCookie = (name) => {
+  const prefix = `${name}=`;
+  const cookie = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix));
+  if (!cookie) return null;
+  return decodeURIComponent(cookie.slice(prefix.length));
+};
+
+const getCsrfCookieName = () => sessionStorage.getItem(CSRF_COOKIE_NAME_KEY) || DEFAULT_CSRF_COOKIE_NAME;
+
+const setCsrfCookieName = (value) => {
+  if (typeof value !== "string") return;
+  const normalized = value.trim();
+  if (!normalized) return;
+  sessionStorage.setItem(CSRF_COOKIE_NAME_KEY, normalized);
+};
+
+const ensureCsrfToken = async () => {
+  const cookieName = getCsrfCookieName();
+  const inStorage = sessionStorage.getItem(CSRF_TOKEN_KEY);
+  const fromCookie = readCookie(cookieName);
+  if (inStorage && fromCookie && inStorage === fromCookie) {
+    return inStorage;
+  }
+
+  let response;
+  try {
+    response = await fetch(`${getApiBase()}/api/csrf-token`, {
+      method: "GET",
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Could not initialize CSRF protection");
+  }
+  if (!response.ok) {
+    throw new Error(`Unable to initialize CSRF protection (${response.status})`);
+  }
+
+  const payload = await response.json();
+  setCsrfCookieName(payload?.csrfCookieName);
+  if (!payload?.csrfToken) {
+    throw new Error("CSRF token endpoint did not return a token");
+  }
+
+  sessionStorage.setItem(CSRF_TOKEN_KEY, payload.csrfToken);
+  return payload.csrfToken;
+};
 
 const formatAnonymousTag = (anonId) => {
   if (!anonId) return "Anonymous";
@@ -72,14 +136,6 @@ const formatRelativeTime = (timestamp) => {
   if (hours < 24) return `${hours}h ago`;
   return `${days}d ago`;
 };
-
-const escapeHtml = (value) =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 
 const safeSnippet = (value, max = 200) => {
   const text = typeof value === "string" ? value : "";
@@ -121,17 +177,32 @@ const saveDashboardState = () => {
   localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboardState.profile));
 };
 
-const requestJson = async (path, { method = "GET", auth = false } = {}) => {
+const requestJson = async (path, { method = "GET", auth = false, body } = {}) => {
+  const upperMethod = method.toUpperCase();
   const headers = { "Content-Type": "application/json" };
   if (auth && getAuthToken()) {
     headers.Authorization = `Bearer ${getAuthToken()}`;
   }
+  if (isUnsafeMethod(upperMethod)) {
+    headers["X-CSRF-Token"] = await ensureCsrfToken();
+  }
 
-  const response = await fetch(`${getApiBase()}${path}`, {
-    method,
-    headers,
-    credentials: "include",
-  });
+  let response;
+  try {
+    response = await fetch(`${getApiBase()}${path}`, {
+      method: upperMethod,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Network request failed. Verify backend URL and CORS settings.");
+  }
+
+  const anonHeader = response.headers.get("X-Anon-Id");
+  if (anonHeader) {
+    localStorage.setItem("anon_id", anonHeader);
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const payload = contentType.includes("application/json") ? await response.json() : null;
@@ -147,16 +218,23 @@ const detectIdentity = async () => {
   const guestPage = window.location.pathname.endsWith("dashboard.html");
 
   dashboardState.authUser = null;
-  if (getAuthToken()) {
-    try {
-      const me = await requestJson("/api/auth/me", { auth: true });
-      dashboardState.authUser = me;
-      localStorage.setItem("username", me.username);
-      if (me?.role) {
-        localStorage.setItem("user_role", me.role);
-      }
-    } catch {
-      // Token may be stale.
+  try {
+    const me = await requestJson("/api/auth/me", { auth: true });
+    dashboardState.authUser = me;
+    localStorage.setItem("username", me.username);
+    if (me?.role) {
+      localStorage.setItem("user_role", me.role);
+    }
+  } catch (error) {
+    const message = String(error?.message || "").toLowerCase();
+    const authFailure =
+      message.includes("401") ||
+      message.includes("invalid") ||
+      message.includes("expired") ||
+      message.includes("missing") ||
+      message.includes("authentication token");
+
+    if (authFailure) {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("username");
       localStorage.removeItem("user_role");
@@ -165,6 +243,11 @@ const detectIdentity = async () => {
 
   if (dashboardState.authUser && guestPage) {
     window.location.replace("dashboard-user.html");
+    return false;
+  }
+
+  if (!dashboardState.authUser && userPage) {
+    window.location.replace("dashboard.html");
     return false;
   }
 
@@ -181,10 +264,6 @@ const detectIdentity = async () => {
       id: anon,
       label: formatAnonymousTag(anon),
     };
-
-    if (userPage) {
-      setText("#profileType", "Guest User");
-    }
   }
 
   return true;
@@ -242,8 +321,9 @@ const applyProfileUI = () => {
   if (profileAvatar) {
     if (isUser) {
       profileAvatar.classList.add("editable");
-      if (!profileAvatar.getAttribute("onclick")) {
-        profileAvatar.setAttribute("onclick", "showAvatarUploadModal()");
+      if (!profileAvatar.getAttribute("onclick") && profileAvatar.dataset.avatarBound !== "true") {
+        profileAvatar.addEventListener("click", showAvatarUploadModal);
+        profileAvatar.dataset.avatarBound = "true";
       }
     } else {
       profileAvatar.classList.remove("editable");
@@ -271,59 +351,44 @@ const applyProfileUI = () => {
   }
 };
 
-const isAuthoredByIdentity = (post) => {
-  const identity = dashboardState.identity;
-  if (!identity || !post) return false;
+const fetchDashboardSummary = async () => {
+  const payload = await requestJson("/api/dashboard/summary", { auth: true });
+  const summary = payload?.summary && typeof payload.summary === "object" ? payload.summary : {};
+  const startedThreads = Array.isArray(payload?.startedThreads) ? payload.startedThreads : [];
+  const replies = Array.isArray(payload?.replies) ? payload.replies : [];
+  const activity = Array.isArray(payload?.activity) ? payload.activity : [];
 
-  if (identity.type === "user") {
-    return post.author_type === "user" && post.author_ref === identity.id;
+  dashboardState.dashboardSummary = {
+    summary: {
+      threadsStarted: Number(summary.threadsStarted || 0),
+      repliesPosted: Number(summary.repliesPosted || 0),
+      totalPosts: Number(summary.totalPosts || 0),
+    },
+    startedThreads,
+    replies,
+    activity,
+  };
+
+  dashboardState.threadLookup = new Map(
+    startedThreads.map((thread, index) => [String(thread.id), index])
+  );
+
+  if (payload?.identity?.type && payload?.identity?.id) {
+    const isUser = payload.identity.type === "user";
+    dashboardState.identity = {
+      type: payload.identity.type,
+      id: payload.identity.id,
+      label: isUser
+        ? dashboardState.authUser?.username || getStoredUsername() || "Member"
+        : formatAnonymousTag(payload.identity.id),
+    };
   }
-  return post.author_type === "anon" && post.author_ref === identity.id;
 };
 
-const fetchThreadsAndPosts = async () => {
-  const threads = await requestJson("/api/threads", { auth: false });
-  dashboardState.threads = Array.isArray(threads) ? threads : [];
-
-  const postRequests = dashboardState.threads.map(async (thread) => {
-    try {
-      const posts = await requestJson(`/api/posts/thread/${thread.id}`, { auth: false });
-      return [thread.id, Array.isArray(posts) ? posts : []];
-    } catch {
-      return [thread.id, []];
-    }
-  });
-
-  const entries = await Promise.all(postRequests);
-  dashboardState.postsByThread = new Map(entries);
-};
-
-const computeSummary = () => {
-  const authoredPosts = [];
-  const startedThreads = [];
-
-  for (const thread of dashboardState.threads) {
-    const posts = dashboardState.postsByThread.get(thread.id) || [];
-    const firstPost = posts[0];
-
-    if (firstPost && isAuthoredByIdentity(firstPost)) {
-      startedThreads.push({ thread, firstPost });
-    }
-
-    for (const post of posts) {
-      if (isAuthoredByIdentity(post)) {
-        authoredPosts.push({ thread, post, isThreadStarter: firstPost && firstPost.id === post.id });
-      }
-    }
-  }
-
-  const replies = authoredPosts.filter((item) => !item.isThreadStarter);
-  return { authoredPosts, startedThreads, replies };
-};
-
-const renderStatCards = (summary) => {
-  setText("#statThreads", String(summary.startedThreads.length));
-  setText("#statReplies", String(summary.replies.length));
+const renderStatCards = (summaryState) => {
+  const stats = summaryState?.summary || {};
+  setText("#statThreads", String(stats.threadsStarted || 0));
+  setText("#statReplies", String(stats.repliesPosted || 0));
   setText("#statLikes", "--");
 
   if (dashboardState.authUser?.created_at) {
@@ -335,56 +400,91 @@ const renderStatCards = (summary) => {
 
 const clearContainer = (selector) => {
   const node = document.querySelector(selector);
-  if (node) node.innerHTML = "";
+  if (node) node.textContent = "";
   return node;
 };
 
-const makeActivityItem = ({ iconClass, text, time }) => {
+const makeEmptyState = ({ title, message, actionLabel, actionHref }) => {
+  const wrapper = document.createElement("div");
+  wrapper.className = "empty-state";
+
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  const body = document.createElement("p");
+  body.textContent = message;
+  wrapper.append(heading, body);
+
+  if (actionLabel && actionHref) {
+    const link = document.createElement("a");
+    link.href = actionHref;
+    const button = document.createElement("button");
+    button.className = "btn-primary";
+    button.type = "button";
+    button.textContent = actionLabel;
+    link.appendChild(button);
+    wrapper.appendChild(link);
+  }
+
+  return wrapper;
+};
+
+const makeActivityItem = (entry) => {
+  const iconClass = entry?.kind === "thread_start" ? "activity-icon-thread" : "activity-icon-reply";
   const item = document.createElement("div");
   item.className = "activity-item";
-  item.innerHTML = `
-    <div class="activity-icon ${iconClass}">
-      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-    </div>
-    <div class="activity-content">
-      <p>${text}</p>
-      <span class="activity-time">${time}</span>
-    </div>
-  `;
+
+  const icon = document.createElement("div");
+  icon.className = `activity-icon ${iconClass}`;
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNs, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "currentColor");
+  const circle = document.createElementNS(svgNs, "circle");
+  circle.setAttribute("cx", "12");
+  circle.setAttribute("cy", "12");
+  circle.setAttribute("r", "10");
+  svg.appendChild(circle);
+  icon.appendChild(svg);
+
+  const content = document.createElement("div");
+  content.className = "activity-content";
+  const text = document.createElement("p");
+  const actor = document.createElement("strong");
+  actor.textContent = "You";
+  text.appendChild(actor);
+  text.appendChild(
+    document.createTextNode(entry?.kind === "thread_start" ? " started " : " replied in ")
+  );
+
+  const link = document.createElement("a");
+  link.href = `thread.html?id=${encodeURIComponent(String(entry?.thread_id || ""))}`;
+  link.textContent = String(entry?.thread_title || "a thread");
+  text.appendChild(link);
+
+  const time = document.createElement("span");
+  time.className = "activity-time";
+  time.textContent = formatRelativeTime(entry?.created_at);
+
+  content.append(text, time);
+  item.append(icon, content);
   return item;
 };
 
-const renderActivity = (summary) => {
+const renderActivity = (summaryState) => {
   const activityTab = clearContainer("#activityTab");
   if (!activityTab) return;
 
-  const items = [];
-  for (const item of summary.authoredPosts) {
-    const kind = item.isThreadStarter ? "activity-icon-thread" : "activity-icon-reply";
-    const action = item.isThreadStarter ? "started" : "replied in";
-    const title = escapeHtml(item.thread.title);
-    items.push({
-      iconClass: kind,
-      text: `<strong>You</strong> ${action} <a href="thread.html?id=${encodeURIComponent(item.thread.id)}">${title}</a>`,
-      time: formatRelativeTime(item.post.created_at),
-      timestamp: new Date(item.post.created_at).getTime(),
-    });
-  }
-
-  items.sort((a, b) => {
-    const ta = Number.isFinite(a.timestamp) ? a.timestamp : 0;
-    const tb = Number.isFinite(b.timestamp) ? b.timestamp : 0;
-    return tb - ta;
-  });
+  const items = Array.isArray(summaryState?.activity) ? summaryState.activity : [];
 
   if (!items.length) {
-    activityTab.innerHTML = `
-      <div class="empty-state">
-        <h3>No Recent Activity</h3>
-        <p>Start participating in discussions to see your activity here.</p>
-        <a href="home.html"><button class="btn-primary">Browse Threads</button></a>
-      </div>
-    `;
+    activityTab.appendChild(
+      makeEmptyState({
+        title: "No Recent Activity",
+        message: "Start participating in discussions to see your activity here.",
+        actionLabel: "Browse Threads",
+        actionHref: "home.html",
+      })
+    );
     return;
   }
 
@@ -394,73 +494,110 @@ const renderActivity = (summary) => {
   activityTab.appendChild(list);
 };
 
-const renderThreadsTab = (summary) => {
+const renderThreadsTab = (summaryState) => {
   const tab = clearContainer("#threadsTab");
   if (!tab) return;
 
-  if (!summary.startedThreads.length) {
-    tab.innerHTML = `
-      <div class="empty-state">
-        <h3>No Threads Yet</h3>
-        <p>You haven't started any discussions yet.</p>
-        <button class="btn-primary" onclick="location.href='home.html?new=1'">Start Your First Thread</button>
-      </div>
-    `;
+  const startedThreads = Array.isArray(summaryState?.startedThreads)
+    ? summaryState.startedThreads
+    : [];
+
+  if (!startedThreads.length) {
+    tab.appendChild(
+      makeEmptyState({
+        title: "No Threads Yet",
+        message: "You haven't started any discussions yet.",
+        actionLabel: "Start Your First Thread",
+        actionHref: "home.html?new=1",
+      })
+    );
     return;
   }
 
   const list = document.createElement("div");
   list.className = "content-list";
 
-  summary.startedThreads.forEach((entry) => {
+  startedThreads.forEach((entry) => {
     const item = document.createElement("div");
     item.className = "content-item";
-    const title = escapeHtml(entry.thread.title);
-    const preview = escapeHtml(safeSnippet(entry.firstPost?.content || "No opening message.", 170));
-    item.innerHTML = `
-      <h4><a href="thread.html?id=${encodeURIComponent(entry.thread.id)}">${title}</a></h4>
-      <p class="content-preview">${preview}</p>
-      <div class="content-meta">
-        <span>${Math.max((entry.thread.post_count || 0) - 1, 0)} replies</span>
-        <span>Active ${formatRelativeTime(entry.thread.last_activity_at || entry.thread.created_at)}</span>
-      </div>
-    `;
+
+    const heading = document.createElement("h4");
+    const link = document.createElement("a");
+    link.href = `thread.html?id=${encodeURIComponent(String(entry.id || ""))}`;
+    link.textContent = String(entry.title || "Untitled thread");
+    heading.appendChild(link);
+
+    const preview = document.createElement("p");
+    preview.className = "content-preview";
+    preview.textContent = safeSnippet(entry.first_post_content || "No opening message.", 170);
+
+    const meta = document.createElement("div");
+    meta.className = "content-meta";
+    const replies = document.createElement("span");
+    replies.textContent = `${Math.max((entry.post_count || 0) - 1, 0)} replies`;
+    const active = document.createElement("span");
+    active.textContent = `Active ${formatRelativeTime(entry.last_activity_at || entry.created_at)}`;
+    meta.append(replies, active);
+
+    item.append(heading, preview, meta);
     list.appendChild(item);
   });
 
   tab.appendChild(list);
 };
 
-const renderRepliesTab = (summary) => {
+const renderRepliesTab = (summaryState) => {
   const tab = clearContainer("#repliesTab");
   if (!tab) return;
 
-  if (!summary.replies.length) {
-    tab.innerHTML = `
-      <div class="empty-state">
-        <h3>No Replies Yet</h3>
-        <p>You haven't replied to any threads yet.</p>
-        <a href="home.html"><button class="btn-primary">Join a Discussion</button></a>
-      </div>
-    `;
+  const replies = Array.isArray(summaryState?.replies) ? summaryState.replies : [];
+  if (!replies.length) {
+    tab.appendChild(
+      makeEmptyState({
+        title: "No Replies Yet",
+        message: "You haven't replied to any threads yet.",
+        actionLabel: "Join a Discussion",
+        actionHref: "home.html",
+      })
+    );
     return;
   }
 
   const list = document.createElement("div");
   list.className = "content-list";
 
-  summary.replies.slice(0, 12).forEach((entry) => {
+  replies.slice(0, 12).forEach((entry) => {
     const item = document.createElement("div");
     item.className = "content-item";
-    const title = escapeHtml(entry.thread.title);
-    const preview = escapeHtml(safeSnippet(entry.post.content, 200));
-    item.innerHTML = `
-      <p class="reply-to">Reply to: <a href="thread.html?id=${encodeURIComponent(entry.thread.id)}">${title}</a></p>
-      <p class="content-preview">${preview}</p>
-      <div class="content-meta">
-        <span>${formatRelativeTime(entry.post.created_at)}</span>
-      </div>
-    `;
+
+    const replyTo = document.createElement("p");
+    replyTo.className = "reply-to";
+    replyTo.appendChild(document.createTextNode("Reply to: "));
+    const link = document.createElement("a");
+    link.href = `thread.html?id=${encodeURIComponent(String(entry.thread_id || ""))}`;
+    link.textContent = String(entry.thread_title || "Untitled thread");
+    replyTo.appendChild(link);
+
+    const threadIndex = dashboardState.threadLookup.get(String(entry.thread_id || ""));
+    if (typeof threadIndex === "number") {
+      const ownThreadTag = document.createElement("span");
+      ownThreadTag.className = "thread-badge new";
+      ownThreadTag.textContent = "In your thread";
+      replyTo.appendChild(document.createTextNode(" "));
+      replyTo.appendChild(ownThreadTag);
+    }
+
+    const preview = document.createElement("p");
+    preview.className = "content-preview";
+    preview.textContent = safeSnippet(entry.content, 200);
+
+    const meta = document.createElement("div");
+    meta.className = "content-meta";
+    const when = document.createElement("span");
+    when.textContent = formatRelativeTime(entry.created_at);
+    meta.appendChild(when);
+
+    item.append(replyTo, preview, meta);
     list.appendChild(item);
   });
 
@@ -470,15 +607,15 @@ const renderRepliesTab = (summary) => {
 const renderSavedTab = () => {
   const tab = clearContainer("#savedTab");
   if (!tab) return;
-  tab.innerHTML = `
-    <div class="empty-state">
-      <h3>No Saved Items</h3>
-      <p>Saved content is not connected yet.</p>
-    </div>
-  `;
+  tab.appendChild(
+    makeEmptyState({
+      title: "No Saved Items",
+      message: "Saved content is not connected yet.",
+    })
+  );
 };
 
-const updateTabCounts = (summary) => {
+const updateTabCounts = (summaryState) => {
   const setTabLabel = (tab, base, count) => {
     const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
     if (!btn) return;
@@ -491,8 +628,18 @@ const updateTabCounts = (summary) => {
     }
   };
 
-  setTabLabel("threads", "My Threads", summary.startedThreads.length);
-  setTabLabel("replies", "My Replies", summary.replies.length);
+  const startedThreads = Array.isArray(summaryState?.startedThreads)
+    ? summaryState.startedThreads
+    : [];
+  const replies = Array.isArray(summaryState?.replies) ? summaryState.replies : [];
+  const stats = summaryState?.summary || {};
+  const threadsCount = Number.isFinite(stats.threadsStarted)
+    ? stats.threadsStarted
+    : startedThreads.length;
+  const repliesCount = Number.isFinite(stats.repliesPosted) ? stats.repliesPosted : replies.length;
+
+  setTabLabel("threads", "My Threads", threadsCount);
+  setTabLabel("replies", "My Replies", repliesCount);
   setTabLabel("saved", "Saved", null);
 };
 
@@ -500,8 +647,8 @@ const refreshDashboardData = async () => {
   if (!dashboardState.identity) return;
 
   try {
-    await fetchThreadsAndPosts();
-    const summary = computeSummary();
+    await fetchDashboardSummary();
+    const summary = dashboardState.dashboardSummary;
     renderStatCards(summary);
     renderActivity(summary);
     renderThreadsTab(summary);
@@ -726,9 +873,15 @@ const shareProfile = async () => {
   }
 };
 
-const clearSession = () => {
+const clearSession = async () => {
+  try {
+    await requestJson("/api/auth/logout", { method: "POST", auth: false });
+  } catch {
+    // Local cleanup still proceeds even if backend logout fails.
+  }
   localStorage.removeItem("auth_token");
   localStorage.removeItem("username");
+  localStorage.removeItem("user_role");
   localStorage.removeItem("anon_id");
   sessionStorage.clear();
   window.location.href = "index.html";
@@ -787,14 +940,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadDashboardState();
 
   const cachedUsername = getStoredUsername();
-  if (getAuthToken() && cachedUsername) {
+  if (cachedUsername) {
     dashboardState.identity = {
       type: "user",
       id: null,
       label: cachedUsername,
     };
     applyProfileUI();
-  } else if (!getAuthToken()) {
+  } else {
     dashboardState.identity = {
       type: "anon",
       id: getAnonId(),

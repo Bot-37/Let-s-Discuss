@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import threadRoutes from "./routes/threads.routes.js";
 import postRoutes from "./routes/posts.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -32,15 +33,14 @@ if (env.TRUST_PROXY) {
 }
 
 const allowedOrigins = new Set(env.CORS_ORIGINS);
-const allowAnyOrigin = allowedOrigins.has("*");
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowAnyOrigin || allowedOrigins.has(origin)) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
       return callback(new Error("CORS origin not allowed"));
     },
-    credentials: !allowAnyOrigin,
+    credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Anon-Id"],
     exposedHeaders: [
       "X-Anon-Id",
@@ -72,6 +72,7 @@ app.use("/api", csrfProtection);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/threads", threadRoutes);
 app.use("/api/posts", postRoutes);
 
