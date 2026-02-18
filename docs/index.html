@@ -44,7 +44,7 @@
     
     <div class="cta-group">
       <button class="btn-primary" type="button" onclick="showAuthChoiceModal()">Get Started</button>
-      <a href="home.html"><button class="btn-outline">Continue Anonymously</button></a>
+      <button class="btn-outline" type="button" onclick="window.location.href='home.html'">Continue Anonymously</button>
     </div>
   </div>
 
@@ -82,11 +82,11 @@
   </div>
 </main>
 
-<div id="authChoiceModal" class="modal">
+<div id="authChoiceModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authChoiceTitle">
   <div class="modal-content auth-choice-modal">
     <div class="modal-header">
-      <h3>Start Discussing</h3>
-      <button class="modal-close" type="button" onclick="closeAuthChoiceModal()">&times;</button>
+      <h3 id="authChoiceTitle">Start Discussing</h3>
+      <button class="modal-close" type="button" onclick="closeAuthChoiceModal()" aria-label="Close dialog">&times;</button>
     </div>
     <div class="modal-body">
       <p class="auth-choice-copy">Choose how you want to continue.</p>
