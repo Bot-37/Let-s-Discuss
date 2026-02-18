@@ -37,8 +37,8 @@
   <main class="auth-page">
     <div class="auth-container">
       <div class="auth-tabs">
-        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
-        <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+        <button class="auth-tab active" type="button" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" type="button" onclick="switchTab('register')">Create Account</button>
       </div>
 
       <!-- Login Form -->
@@ -48,15 +48,15 @@
 
         <div class="form-group">
           <label for="loginUsername">Username</label>
-          <input type="text" id="loginUsername" placeholder="anonymous_user" autocomplete="username" />
+          <input type="text" id="loginUsername" placeholder="anonymous_user" autocomplete="username" required />
         </div>
 
         <div class="form-group">
           <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
         </div>
 
-        <button class="btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+        <button class="btn-primary btn-full" type="button" onclick="handleLogin()">Sign In</button>
 
         <div class="auth-info">
           <p>🔒 No email required. No password recovery.</p>
@@ -71,23 +71,33 @@
 
         <div class="form-group">
           <label for="registerUsername">Username</label>
-          <input type="text" id="registerUsername" placeholder="Choose a username" autocomplete="username" />
+          <input
+            type="text"
+            id="registerUsername"
+            placeholder="Choose a username"
+            autocomplete="username"
+            minlength="3"
+            maxlength="32"
+            pattern="[A-Za-z0-9_]+"
+            title="Use 3-32 characters: letters, numbers, underscores."
+            required
+          />
           <span class="input-hint">This will be your persistent anonymous ID</span>
         </div>
 
         <div class="form-group">
           <label for="registerPassword">Password</label>
           <input type="password" id="registerPassword" placeholder="Create a strong password"
-            autocomplete="new-password" />
+            autocomplete="new-password" minlength="8" maxlength="72" required />
         </div>
 
         <div class="form-group">
           <label for="confirmPassword">Confirm Password</label>
           <input type="password" id="confirmPassword" placeholder="Re-enter your password"
-            autocomplete="new-password" />
+            autocomplete="new-password" minlength="8" maxlength="72" required />
         </div>
 
-        <button class="btn-primary btn-full" onclick="handleRegister()">Create Account</button>
+        <button class="btn-primary btn-full" type="button" onclick="handleRegister()">Create Account</button>
 
         <div class="auth-info">
           <p>⚠️ <strong>Important:</strong> There is no password recovery.</p>

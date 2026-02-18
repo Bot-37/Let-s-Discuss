@@ -1,27 +1,89 @@
 /**
  * Intro Animation System
- * Displays a stunning intro animation on first visit per session
+ * Displays the intro animation once per tab session.
  */
 
-const INTRO_SESSION_KEY = 'intro_shown';
+const INTRO_SESSION_KEY = "intro_shown";
+const INTRO_VISIBLE_MS = 3400;
+const INTRO_FADE_MS = 600;
+const FALLBACK_TIMEOUT_MS = 5000;
+const introMemoryStore = { shown: false };
 
-// Check if intro should be shown
-function shouldShowIntro() {
-    // Check if already shown this session
-    const shown = sessionStorage.getItem(INTRO_SESSION_KEY);
-    return !shown;
+let introOverlay = null;
+let finishTimer = null;
+let cleanupTimer = null;
+let fallbackTimer = null;
+
+function readSessionFlag() {
+  try {
+    return sessionStorage.getItem(INTRO_SESSION_KEY) === "true";
+  } catch {
+    return introMemoryStore.shown;
+  }
 }
 
-// Mark intro as shown
-function markIntroShown() {
-    sessionStorage.setItem(INTRO_SESSION_KEY, 'true');
+function writeSessionFlag(value) {
+  introMemoryStore.shown = Boolean(value);
+  try {
+    sessionStorage.setItem(INTRO_SESSION_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore storage failures (private mode / storage restrictions).
+  }
 }
 
-// Create intro animation HTML
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+}
+
+function clearIntroTimers() {
+  if (finishTimer) {
+    clearTimeout(finishTimer);
+    finishTimer = null;
+  }
+  if (cleanupTimer) {
+    clearTimeout(cleanupTimer);
+    cleanupTimer = null;
+  }
+  if (fallbackTimer) {
+    clearTimeout(fallbackTimer);
+    fallbackTimer = null;
+  }
+}
+
+function releaseBodyLock() {
+  if (document.body) {
+    document.body.style.overflow = "";
+  }
+}
+
+function removeIntroOverlay() {
+  if (introOverlay?.parentNode) {
+    introOverlay.parentNode.removeChild(introOverlay);
+  }
+  introOverlay = null;
+}
+
+function completeIntro() {
+  clearIntroTimers();
+  removeIntroOverlay();
+  releaseBodyLock();
+  writeSessionFlag(true);
+}
+
+function startFadeOut() {
+  if (!introOverlay) {
+    completeIntro();
+    return;
+  }
+
+  introOverlay.classList.add("fade-out");
+  cleanupTimer = setTimeout(completeIntro, INTRO_FADE_MS);
+}
+
 function createIntroAnimation() {
-    const introOverlay = document.createElement('div');
-    introOverlay.className = 'intro-overlay';
-    introOverlay.innerHTML = `
+  const overlay = document.createElement("div");
+  overlay.className = "intro-overlay";
+  overlay.innerHTML = `
     <div class="intro-content">
       <div class="intro-logo">
         <div class="intro-logo-circle">
@@ -36,46 +98,50 @@ function createIntroAnimation() {
       </div>
     </div>
   `;
-
-    return introOverlay;
+  return overlay;
 }
 
-// Play intro animation
 function playIntroAnimation() {
-    if (!shouldShowIntro()) {
-        return;
-    }
+  if (readSessionFlag()) return;
+  if (!document.body) return;
 
-    const introOverlay = createIntroAnimation();
-    document.body.appendChild(introOverlay);
+  // Respect accessibility preference and skip non-essential motion.
+  if (prefersReducedMotion()) {
+    writeSessionFlag(true);
+    return;
+  }
 
-    // Prevent scrolling during animation
-    document.body.style.overflow = 'hidden';
+  // Guard against duplicate initialization.
+  if (introOverlay || document.querySelector(".intro-overlay")) {
+    writeSessionFlag(true);
+    return;
+  }
 
-    // Force reflow for animation
-    introOverlay.offsetHeight;
+  introOverlay = createIntroAnimation();
+  document.body.appendChild(introOverlay);
+  document.body.style.overflow = "hidden";
 
-    // Start animation
-    requestAnimationFrame(() => {
-        introOverlay.classList.add('active');
-    });
+  // Force reflow so .active transition is reliably applied.
+  void introOverlay.offsetHeight;
+  requestAnimationFrame(() => {
+    introOverlay?.classList.add("active");
+  });
 
-    // Complete animation after duration
-    setTimeout(() => {
-        introOverlay.classList.add('fade-out');
-
-        // Remove overlay after fade out
-        setTimeout(() => {
-            document.body.removeChild(introOverlay);
-            document.body.style.overflow = '';
-            markIntroShown();
-        }, 600);
-    }, 3400); // Total animation time: 3.4s
+  finishTimer = setTimeout(startFadeOut, INTRO_VISIBLE_MS);
+  // Hard fail-safe in case timers/transition are interrupted.
+  fallbackTimer = setTimeout(completeIntro, FALLBACK_TIMEOUT_MS);
 }
 
-// Initialize intro animation when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', playIntroAnimation);
+// Ensure overlay cannot stay stuck if tab/page lifecycle interrupts timers.
+window.addEventListener("pagehide", completeIntro);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && introOverlay) {
+    completeIntro();
+  }
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", playIntroAnimation, { once: true });
 } else {
-    playIntroAnimation();
+  playIntroAnimation();
 }

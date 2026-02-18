@@ -27,12 +27,17 @@ const resolveApiBaseUrl = () => {
     }
   }
 
-  throw new Error(
-    "API base URL is not configured. Set window.__API_BASE_URL__ in runtime-config.js to your Render backend URL."
-  );
+  return "";
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
+const assertApiBaseConfigured = () => {
+  if (!API_BASE_URL) {
+    throw new Error(
+      "API base URL is not configured. Set window.__API_BASE_URL__ in docs/runtime-config.js."
+    );
+  }
+};
 const AUTH_TOKEN_KEY = "auth_token";
 const USERNAME_KEY = "username";
 const USER_ROLE_KEY = "user_role";
@@ -326,6 +331,7 @@ const setCsrfCookieName = (value) => {
 };
 
 const ensureCsrfToken = async () => {
+  assertApiBaseConfigured();
   const cookieName = getCsrfCookieName();
   const inStorage = sessionStorage.getItem(CSRF_TOKEN_KEY);
   const fromCookie = readCookie(cookieName);
@@ -371,6 +377,7 @@ const ensureCsrfToken = async () => {
 };
 
 const runAuthPreflight = async () => {
+  assertApiBaseConfigured();
   let healthResponse;
   try {
     healthResponse = await fetch(`${API_BASE_URL}/health`, {
@@ -391,6 +398,7 @@ const runAuthPreflight = async () => {
 };
 
 const requestJson = async (path, { method = "GET", body, auth = true } = {}) => {
+  assertApiBaseConfigured();
   const upperMethod = method.toUpperCase();
   const headers = {
     "Content-Type": "application/json",

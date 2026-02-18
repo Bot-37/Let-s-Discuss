@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lets-discuss-v2';
+const CACHE_NAME = 'lets-discuss-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
