@@ -154,6 +154,7 @@ Note:
 - Configure the backend origin in `docs/runtime-config.js`.
 - For production cross-origin cookies, use HTTPS and review:
   - `CSRF_COOKIE_SAME_SITE`
+  - `CSRF_COOKIE_PARTITIONED`
   - `AUTH_COOKIE_SAME_SITE`
   - `ANON_COOKIE_SAME_SITE`
   - `*_COOKIE_SECURE`
@@ -169,3 +170,4 @@ Note:
 - Database connection errors in local dev: set `DB_SSL=false` unless your local PostgreSQL is SSL-enabled.
 - CORS 403 (`Origin is not allowed`): make sure frontend origin is listed in `CORS_ORIGIN`.
 - CSRF errors on POST routes: call `/api/csrf-token` first and include the token in `X-CSRF-Token`.
+- Cross-site signup/login issues on strict browsers: use `SameSite=None; Secure` and set `CSRF_COOKIE_PARTITIONED=true`.

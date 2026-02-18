@@ -59,7 +59,7 @@ Behavior:
 - CSRF response returns `{ csrfToken, csrfCookieName }`.
 - Unsafe methods require `X-CSRF-Token` matching CSRF cookie.
 - Unsafe requests are accepted only from configured origins.
-- Cross-origin deployments should use `CSRF_COOKIE_SAME_SITE=none` with HTTPS.
+- Cross-origin deployments should use `CSRF_COOKIE_SAME_SITE=none`, `CSRF_COOKIE_SECURE=true`, and typically `CSRF_COOKIE_PARTITIONED=true`.
 
 ## Error Exposure Controls
 
@@ -80,6 +80,7 @@ Behavior:
 - `CORS_ORIGIN=https://<your-frontend-origin>`
 - `CSRF_COOKIE_SAME_SITE=none`
 - `CSRF_COOKIE_SECURE=true`
+- `CSRF_COOKIE_PARTITIONED=true`
 - `AUTH_COOKIE_SAME_SITE=none`
 - `AUTH_COOKIE_SECURE=true`
 - `AUTH_COOKIE_PARTITIONED=true`

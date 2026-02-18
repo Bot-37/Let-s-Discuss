@@ -77,6 +77,10 @@ const csrfCookieSecure = toBool(
   process.env.CSRF_COOKIE_SECURE,
   isProduction || csrfCookieSameSite === "none"
 );
+const csrfCookiePartitioned = toBool(
+  process.env.CSRF_COOKIE_PARTITIONED,
+  isProduction && csrfCookieSameSite === "none"
+);
 const authCookieSameSite = toSameSite(
   process.env.AUTH_COOKIE_SAME_SITE,
   isProduction ? "none" : "lax"
@@ -115,6 +119,10 @@ if (corsOrigins.includes("*")) {
 
 if (csrfCookieSameSite === "none" && !csrfCookieSecure) {
   throw new Error("CSRF cookie must be Secure when CSRF_COOKIE_SAME_SITE=none");
+}
+
+if (csrfCookiePartitioned && !csrfCookieSecure) {
+  throw new Error("CSRF_COOKIE_PARTITIONED requires CSRF_COOKIE_SECURE=true");
 }
 
 if (authCookieSameSite === "none" && !authCookieSecure) {
@@ -162,6 +170,7 @@ export const env = Object.freeze({
   CSRF_MAX_AGE_SEC: toInt(process.env.CSRF_MAX_AGE_SEC, 2 * 60 * 60),
   CSRF_COOKIE_SAME_SITE: csrfCookieSameSite,
   CSRF_COOKIE_SECURE: csrfCookieSecure,
+  CSRF_COOKIE_PARTITIONED: csrfCookiePartitioned,
   AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME ?? "auth_token",
   AUTH_COOKIE_MAX_AGE_SEC: toInt(process.env.AUTH_COOKIE_MAX_AGE_SEC, 6 * 60 * 60),
   AUTH_COOKIE_SAME_SITE: authCookieSameSite,

@@ -21,6 +21,7 @@ export function issueCsrfToken(req, res) {
       path: "/",
       sameSite: env.CSRF_COOKIE_SAME_SITE,
       secure: env.CSRF_COOKIE_SECURE,
+      partitioned: env.CSRF_COOKIE_PARTITIONED,
       maxAge: env.CSRF_MAX_AGE_SEC,
     })
   );

@@ -439,6 +439,7 @@ const requestJson = async (path, { method = "GET", body, auth = true } = {}) => 
 };
 
 const sanitizeTextInput = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
+const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 
 const formatCompactNumber = (value) => {
   const num = Number(value);
@@ -629,8 +630,23 @@ const handleRegister = async () => {
     return;
   }
 
+  if (username.length < 3 || username.length > 32) {
+    showNotification("Username must be 3-32 characters", "error");
+    return;
+  }
+
+  if (!USERNAME_PATTERN.test(username)) {
+    showNotification("Username can only contain letters, numbers, and underscores", "error");
+    return;
+  }
+
   if (password.length < 8) {
     showNotification("Password must be at least 8 characters", "error");
+    return;
+  }
+
+  if (password.length > 72) {
+    showNotification("Password must be at most 72 characters", "error");
     return;
   }
 
