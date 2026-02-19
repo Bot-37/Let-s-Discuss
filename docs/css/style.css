@@ -1270,6 +1270,13 @@ main {
   overflow: hidden;
 }
 
+.auth-container > .auth-tabs,
+.auth-container > .auth-form,
+.auth-container > .auth-footer {
+  position: relative;
+  z-index: 1;
+}
+
 .auth-container::before {
   content: '';
   position: absolute;
@@ -1284,6 +1291,8 @@ main {
       rgba(59, 130, 246, 0.05) 270deg,
       transparent 360deg);
   animation: rotateGradient 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes rotateGradient {

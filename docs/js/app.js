@@ -1259,7 +1259,11 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("DOMContentLoaded", async () => {
   initThemeToggles();
   loadTheme();
-  await hydrateCurrentUser();
+  try {
+    await hydrateCurrentUser();
+  } catch {
+    // Don't block auth page or other init if /api/auth/me fails (e.g. backend down, bad token).
+  }
   syncUserBadge();
   initLandingStats();
   initializeFilters();
@@ -1287,6 +1291,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     observeElements();
   }, 100);
 
+  // Auth form: Enter key submits; ensure handlers run even if earlier init threw.
   const authInputs = document.querySelectorAll(".auth-form input");
   authInputs.forEach((input) => {
     input.addEventListener("keypress", (event) => {
@@ -1297,6 +1302,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (form?.id === "registerForm") handleRegister();
     });
   });
+
+  const loginBtn = document.querySelector('.auth-form#loginForm .btn-primary');
+  const registerBtn = document.querySelector('.auth-form#registerForm .btn-primary');
+  if (loginBtn) loginBtn.addEventListener("click", handleLogin);
+  if (registerBtn) registerBtn.addEventListener("click", handleRegister);
+
+  const authTabs = document.querySelectorAll(".auth-tab");
+  if (authTabs[0]) authTabs[0].addEventListener("click", () => switchTab("login"));
+  if (authTabs[1]) authTabs[1].addEventListener("click", () => switchTab("register"));
 
   const replyTextarea = document.getElementById("replyContent");
   if (replyTextarea) {
